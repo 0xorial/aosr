@@ -8,7 +8,6 @@ This plugin is similar to [spaced repetition](https://github.com/st3v3nmw/obsidi
 
 # Demo
 
-
 ![屏幕录制2022-11-08 17 56 11](https://user-images.githubusercontent.com/16589958/200536163-9aa947ff-0898-40ec-ae6a-911fc9107098.gif)
 
 # Format
@@ -18,7 +17,7 @@ This plugin is similar to [spaced repetition](https://github.com/st3v3nmw/obsidi
 A CARD is begin with `#Q` and ends with an empty line.
 
 ```
-#Q 
+#Q
 This is a card.
 Here, please write your questions and answers in Pattern format. The format of Pattern is described below.
 Only content within the #Q and the empty line will be treated as review content.
@@ -73,7 +72,6 @@ You can use the symbol `:::` to flip cards and complete the reverse memory in ad
 word:::definition
 ```
 
-
 ### ? Pattern
 
 In the card, a line with a `?` will split this card. The front part will become a question, and the back part will become an answer.
@@ -106,7 +104,7 @@ In addition, you could add a #multicloze tag to the card to get the same effect.
 If a `#multicloze` tag has been found in the card, Aosr treats all cloze in the card as a group of cloze.
 
 ```
-You should remember ==this== and ==that== at the same time. #multicloze 
+You should remember ==this== and ==that== at the same time. #multicloze
 ```
 
 # Example
@@ -160,7 +158,7 @@ Review means something needs to review.
 
 Learn means something you need to remember right now.
 
-Wait means something you need to remember after a few seconds, but you can't check it right now. Because you have checked it just now. 
+Wait means something you need to remember after a few seconds, but you can't check it right now. Because you have checked it just now.
 
 Once you click one of the buttons, the review begins. Please follow the buttons and instructions on the screen to review.
 
@@ -176,7 +174,7 @@ I know it's not pretty, and it messes up the format of the document. But for me 
 
 The comments will be automatically generated at the end of the document. Its location can also be moved, as long as it is in the same document.
 
-# What's the difference? 
+# What's the difference?
 
 What's the difference between Aosr and obsidian-spaced-repetition?
 
