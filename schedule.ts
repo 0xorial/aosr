@@ -1,32 +1,32 @@
 import { GlobalSettings } from "setting";
 
 export enum ReviewEnum {
-    // 不会
+    // Won't
     HARD = 0,
-    // 尚可
+    // passable
     FAIR = 1,
-    // 简单
+    // Simple
     EASY = 2,
-    // 完全不会
+    // not at all
     FORGET = 3,
 }
 
 export enum LearnEnum {
-    // 简单
+    // Simple
     EASY,
-    // 会了
+    // met
     FAIR,
-    // 不太会
+    // Less likely
     HARD,
-    // 不会
+    // Won't
     FORGET,
 }
 
-// 包含两个子操作
+// Contains two sub-operations
 export abstract class Operation {
 }
 
-// 复习操作
+// review operation
 export class ReviewOpt extends Operation {
     value: ReviewEnum
     constructor(value: ReviewEnum) {
@@ -35,7 +35,7 @@ export class ReviewOpt extends Operation {
     }
 }
 
-// 学习操作
+// learn to operate
 export class LearnOpt extends Operation {
     value: LearnEnum
     constructor(value: LearnEnum) {
@@ -60,26 +60,26 @@ export interface scheduleArrange {
     get NextTime(): moment.Moment
     get LearnedTime(): moment.Moment
     get LearnInfo(): LearnInfo
-    // 根据操作更新复习计划
+    // Update the review plan according to the operation
     apply(opt: Operation): void
-    // 获取下次需要复习的时间
+    // Get the time you need to review next time
     CalcNextTime(opt: ReviewEnum): moment.Moment
-    // 获取学习的进度
+    // Get the progress of learning
     CalcLearnRate(opt: LearnEnum): number
 }
 
 export interface PatternYaml {
-    // 上次学习时间
+    // last study time
     Last: string
-    // 计划下次学习时间
+    // Plan your next study time
     Next: string
-    // 学习操作记录
+    // learning operation record
     Opts: string
-    // 上次被标记为忘记，最后一次复习的时间
+    // Last marked as forgotten, time of last review
     Learned: string | null
-    // 上次被标记为忘记，之后复习的次数
+    // The last time it was marked as forgotten, the number of times it was reviewed after that
     LearnedCount: number | null
-    // 用于读取存储的schedule yaml格式 需要复制对象
+    // The schedule yaml format used to read the storage needs to copy the object
     copy(v: PatternYaml): void
 }
 
@@ -90,7 +90,7 @@ export function NewSchedule(id: string) {
     return new defaultSchedule(id)
 }
 
-// 一个模式的复习信息
+// Review information for a pattern
 export class defaultSchedule implements PatternSchedule {
     copy(v: PatternYaml) {
         this.Opts = v.Opts
@@ -181,8 +181,8 @@ export class defaultSchedule implements PatternSchedule {
         } else if (this.Opts.at(-1) == String(ReviewEnum.FAIR)) {
         } else if (this.LearnedCount && this.LearnedCount >= 2) {
         } else {
-            // 中期记忆内的信息不需要学习
-            // 这部分内容会在过了中期记忆从记忆区中清空后重新安排学习
+            // Information in medium-term memory does not need to be learned
+            // This part will be rescheduled after the medium-term memory is emptied from the memory area
             let checkPoint = window.moment().add(-3, "hours")
             if (this.LearnedTime.isAfter(checkPoint)) {
                 info.IsWait = true
@@ -238,23 +238,23 @@ export class defaultSchedule implements PatternSchedule {
             throw new Error("unknow operation");
         }
         // console.info(`gap ${this.Gap.asDays().toFixed(2)} duration ${duration.asDays().toFixed(2)}`)
-        // 在原来规划的下次复习时间上叠加这次复习的结果
-        // 通常NextTime为now，如果提早或晚复习，则NextTime可能为过去和将来
-        // duration同样可能为正值（表示在规划之后的某天复习）负值（表示这个内容需要将下次规划的时间提早，如果提早到当前时间以前，则需要立即复习）
+        // Superimpose the results of this review on the originally planned next review time
+        // Usually NextTime is now, if you review early or late, NextTime may be past and future
+        // duration may also be a positive value (indicating that it will be reviewed on a certain day after the planning) and a negative value (indicating that this content needs to advance the time of the next planning, if it is earlier than the current time, it needs to be reviewed immediately)
         let nextTime = this.NextTime.add(duration);
-        if (nextTime.unix() < window.moment().unix()) {
-            // 如果需要立即复习，说明复习间隔已被缩短到0以下
-            // 这种情况意味着提交了一次Hard，时间间隔为负值，且叠加在安排计划上之后的下次时间点仍然为过去
-            // 此时需要立刻进行学习，而不是立刻进行复习检测
-            // 因为复习检测并不意味着用户进行了学习，且学会了（尽管很多情况下，复习时用户在压力小的情况下可以同时进行学习并且学会）
-            // 只有学习才能保证用户一定学会了
-            // 假设用户在此刻进行了学习
-            // 如论是否用户真的进行了学习，或者用户在复习过程中顺带进行了学习，我们都将在3小时之后进行复习检测
-            nextTime = window.moment().add(3, "hours");
+        if (nextTime. unix() < window. moment(). unix()) {
+            // If you need to review immediately, it means that the review interval has been shortened to below 0
+            // This situation means that a Hard is submitted, the time interval is a negative value, and the next time point after being superimposed on the arrangement plan is still in the past
+            // At this time, you need to learn immediately, not review and check immediately
+            // Because the review detection does not mean that the user has learned and learned (although in many cases, the user can learn and learn at the same time with less pressure during review)
+            // Only learning can guarantee that users must learn
+            // Assume the user is learning at this point
+            // Regardless of whether the user has actually studied or the user has studied during the review process, we will conduct a review test after 3 hours
+            nextTime = window. moment(). add(3, "hours");
         }
         return nextTime
     }
-    // 清除学习结果
+    // clear study results
     private clearLearn() {
         this.LearnedCount = null;
         this.Learned = null;
@@ -267,7 +267,7 @@ export class defaultSchedule implements PatternSchedule {
     }
     get Ease(): number {
         // console.info(`opts is ${this.OptArr}`)
-        // 困难扣除
+        // hardship deduction
         let hardBonus = 0
         for (let opt of this.OptArr.slice(-20)) {
             if (opt == ReviewEnum.FORGET) {
@@ -277,14 +277,14 @@ export class defaultSchedule implements PatternSchedule {
                 hardBonus += 25
             }
         }
-        // 简单奖励
+        // simple reward
         let easeBouns = 0
         for (let opt of this.OptArr.slice(-20)) {
             if (opt == ReviewEnum.EASY) {
                 easeBouns += 25
             }
         }
-        // 太简单
+        // Too easy
         let easeCount = 0
         for (let opt of this.OptArr.slice(-2)) {
             if (opt == ReviewEnum.EASY) {
@@ -301,7 +301,7 @@ export class defaultSchedule implements PatternSchedule {
     }
 }
 
-// 卡片所有的复习结果
+// Card all review results
 export class CardSchedule {
     copy(cardSchedule: CardSchedule) {
         const map1 = new Map(Object.entries(cardSchedule.schedules))
@@ -336,7 +336,7 @@ abstract class scheduler {
     abstract calculate(): moment.Duration
 }
 
-// 简单难度计算
+// Simple Difficulty Calculations
 class easeSchedule extends scheduler {
     calculate(): moment.Duration {
         let basesecond = this.schedule.Gap.asSeconds() * this.schedule.Ease / 100;
@@ -346,7 +346,7 @@ class easeSchedule extends scheduler {
     }
 }
 
-// 正常难度计算
+// normal difficulty calculation
 class fairSchedule extends scheduler {
     calculate(): moment.Duration {
         let basesecond = this.schedule.Gap.asSeconds() * this.schedule.Ease / 100;
@@ -355,7 +355,7 @@ class fairSchedule extends scheduler {
     }
 }
 
-// 困难难度计算
+// Difficulty calculation
 class hardSchedule extends scheduler {
     calculate(): moment.Duration {
         let basesecond = this.schedule.Gap.asSeconds() * 100 / this.schedule.Ease;
@@ -364,7 +364,7 @@ class hardSchedule extends scheduler {
     }
 }
 
-// 不会难度计算
+// no difficulty calculation
 class unknowSchedule extends scheduler {
     calculate(): moment.Duration {
         let basesecond = this.schedule.Gap.asSeconds() * 100 / this.schedule.Ease;

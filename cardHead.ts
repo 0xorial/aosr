@@ -1,6 +1,6 @@
 export const CardIDTag = "AOSR"
 
-// 更新卡片第一行的卡片ID
+// Update the card ID of the first line of the card
 export function UpdateCardIDTag(cardid:string, fileText:string, index:number):string {
     // let tag = " #" + CardIDTag + "/" + cardid
     let tag = ` #${CardIDTag}/${cardid} [[#^${cardid}]]`

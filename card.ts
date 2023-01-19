@@ -6,30 +6,30 @@ import { cyrb53 } from './hash';
 import { ParserCollection } from './ParserCollection';
 import { Pattern } from './Pattern';
 
-// 卡片
-// 卡片由源码和注释两部分组成，
-// 源码是卡片的正文，书写的内容
-// 注释是卡片的附属信息，存储额外的信息
-// 卡片负责存储和解析md文件中卡片的内容
-// 包括如何定义卡片的元信息以及附属信息
+// card
+// The card consists of source code and comments,
+// The source code is the text of the card, the written content
+// Annotation is the supplementary information of the card, which stores additional information
+// The card is responsible for storing and parsing the content of the card in the md file
+// Including how to define the card's meta information and subsidiary information
 export interface Card {
-	// 获取卡片所属文件
+	// Get the file to which the card belongs
 	get note(): TFile
-	// 获取卡片ID
+	// Get card ID
 	get ID(): string
-	// 获取卡片原始字符串长度
+	// Get the original string length of the card
 	get cardText(): string
-	// 获取源码
+	// Get the source code
 	get bodyList(): string[]
-	// 获取卡片模式
+	// get card mode
 	get patterns(): Pattern[]
-	// 获取卡片偏移量
+	// Get card offset
 	get indexBuff(): number
-	// 获取调度
+	// get schedule
 	getSchedule(patternID: string): PatternSchedule
-	// 更新文件
+	// update file
 	updateFile(info: updateInfo): void
-	// 提交文件变更
+	// Commit file changes
 	commitFile(): Promise<void>
 }
 
@@ -37,12 +37,12 @@ export function NewCard(cardText: string, content: string, annotation: string, c
 	return new defaultCard(cardText, content, annotation, cardID, index, note)
 }
 
-// 更新原文
+// Update original text
 class updateInfo {
 	updateFunc: (fileText: string) => string
 }
 
-// 默认卡片的实现
+// Implementation of the default card
 class defaultCard implements Card {
 	annotationWrapperStr: string = ""
 	bodyList: string[]
@@ -55,7 +55,7 @@ class defaultCard implements Card {
 	updateList: updateInfo[];
 	cardText: string
 	static bodySplitReg = /((?:^(?!\*{3,}$).+$\n?)+)/gm
-	// 1为source 2为注释
+	// 1 is source 2 is comment
 	constructor(cardText: string, content: string, annotationWrapperStr: string, cardID: string, index: number, note: TFile) {
 		this.updateList = []
 		this.indexBuff = index
@@ -84,14 +84,14 @@ class defaultCard implements Card {
 	getSchedule(patternID: string): PatternSchedule {
 		return this.schedules.getSchedule(patternID)
 	}
-	// ID 优先使用原始ID 不存在时为卡片hash结果
+	// ID Prioritize the use of the original ID, when it does not exist, it will be the hash result of the card
 	get ID(): string {
 		if (this.originalID?.length > 0) {
 			return this.originalID
 		}
 		return cyrb53(this.cardText, 5);
 	}
-	// 更新注释块内容
+	// Update comment block content
 	private updateAnnotation(fileText: string): string {
 		let newAnnotation = AnnotationObject.Stringify(this.annotationObj)
 		newAnnotation = AnnotationWrapper.enWrapper(this.ID, newAnnotation)
@@ -108,33 +108,33 @@ class defaultCard implements Card {
 		return fileText
 	}
 	async commitFile() {
-		// 首先读取原文
+		// Read the original text first
 		let fileText = await app.vault.read(this.note)
 		if (!fileText.contains(this.cardText)) {
-			// 如果原文已被改变，可能是复习打开的过程中，用户更改了原文
-			// 原文如果被更改，则不能再对原文进行更新，并且只有在原来有注释的情况下，更新注释
+			// If the original text has been changed, it may be that the user changed the original text during the review process
+			// If the original text is changed, the original text can no longer be updated, and only if there are original annotations, the annotations can be updated
 			console.info("File has been changed, ignore commit original card.")
-			// 只更新复习进度
+			// Only update review progress
 			if (this.annotationWrapperStr?.length > 0) {
 				fileText = this.updateAnnotation(fileText)
 			}
 		} else {
-			// 如果不存在复习块ID 则先更新复习块块ID
+			// If there is no review block ID, update the review block ID first
 			if (this.originalID == "") {
 				let index = fileText.indexOf(this.cardText)
 				if (index >= 0) {
 					fileText = UpdateCardIDTag(this.ID, fileText, index)
 				}
 			}
-			// 更新复习块注释 包括复习进度
+			// Updated review block notes to include review progress
 			fileText = this.updateAnnotation(fileText)
-			// 更新复习块
+			// update review block
 			for (let updateInfo of this.updateList) {
 				fileText = updateInfo.updateFunc(fileText)
 			}
 			this.updateList = []
 		}
-		// 更新注释段内容
+		// Update comment section content
 		await app.vault.modify(this.note, fileText)
 	}
 }

@@ -4,7 +4,7 @@ import { TFile } from 'obsidian';
 import { TagParser } from 'tag';
 import { Card, NewCard } from "./card";
 
-// 搜索的结果
+// search results
 export class SearchResult {
 	AllCard: Card[]
 	SearchName: string
@@ -13,7 +13,7 @@ export class SearchResult {
 	}
 }
 
-// 卡片搜寻器负责搜索可能的卡片
+// The card finder is responsible for searching for possible cards
 export interface cardSearcher {
 	search(file?: TFile): Promise<SearchResult>
 }
@@ -22,11 +22,11 @@ export function NewCardSearch(tagName?: string): cardSearcher {
 	return new defaultCardSearch(tagName)
 }
 
-// 默认的卡片搜索
-// 搜索标签开头的一行，到该段落结束位置，该区域的内容被视为卡片Card的内容
+// Default Card Search
+// Search from the line at the beginning of the tag to the end of the paragraph, and the content of this area is regarded as the content of the card
 class defaultCardSearch implements cardSearcher {
 	private tagName = "Q"
-	// 匹配所有 标签 开头行 到该段落的结束为止
+	// Matches all tags starting with the line up to the end of the paragraph
 	private defaultRegText = String.raw`(^#tagName\b.*)\n((?:^.+$\n?)+)`
 	private matchReg: RegExp
 	async search(file?: TFile): Promise<SearchResult> {
@@ -53,11 +53,11 @@ class defaultCardSearch implements cardSearcher {
 	}
 	async walkFileCard(note: TFile, callback: (card: Card) => void) {
 		let fileText: string = await app.vault.read(note);
-		// workaround 如果文本最后一张卡片后面没有多余的换行，正则无法匹配
+		// workaround If there is no extra newline after the last card of the text, the regular expression cannot match
 		// fileText += "\n"
 		let results = fileText.matchAll(this.matchReg)
 		for (let result of results) {
-			// 匹配注释段
+			// match comment segment
 			let cardText = result[0]
 			let index = result.index || 0
 			let tags = TagParser.parse(result[1])

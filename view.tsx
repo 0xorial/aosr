@@ -35,7 +35,7 @@ type ReviewingProps = {
 	arrangeName: string
 }
 
-// 未看到答案时大脑状态标记
+// Brain state flags when no answer is seen
 enum markEnum {
 	NOTSURE,
 	KNOWN,
@@ -152,7 +152,7 @@ class Reviewing extends React.Component<ReviewingProps, ReviewingState> {
 		if (!view) {
 			return
 		}
-		// 优先使用Tag的位置，如果tag不存在，则使用卡片缓存的位置
+		// The position of the Tag is used first, and if the tag does not exist, the position of the card cache is used
 		let noteText = await app.vault.read(pattern.card.note)
 		let index = noteText.indexOf(pattern.TagID)
 		let offset = 0
@@ -451,7 +451,7 @@ function App(props: props) {
 	);
 }
 
-// 卡片复习视图
+// Card review view
 export class ReviewView extends ItemView {
 	root: Root
 	getViewType(): string {

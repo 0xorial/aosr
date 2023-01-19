@@ -1,7 +1,7 @@
 import { Pattern } from './Pattern';
 import { Card } from './card';
 
-// 解析器集合
+// parser collection
 export class ParserCollection implements PatternParser {
 	private parsers: PatternParser[];
 	private static instance: ParserCollection;
@@ -34,8 +34,8 @@ export class ParserCollection implements PatternParser {
 		this.parsers = []
 	}
 }
-// 卡片解析器 将卡片解析成为视图
-// 卡片解析器负责解析卡片
+// Card parser parses cards into views
+// The card parser is responsible for parsing the card
 
 export interface PatternParser {
 	Parse(card: Card): Pattern[];

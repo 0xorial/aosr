@@ -25,16 +25,16 @@ abstract class linePattern extends Pattern {
 		this.reverse = reverse
 	}
 	abstract insertPatternID(): void
-	// 界面按钮点击
+	// interface button click
 	async SubmitOpt(opt: Operation): Promise<void> {
-		// 计算调度情况
+		// Calculate the scheduling
 		this.card.getSchedule(this.TagID).apply(opt)
-		// 原文中不一定包含pattern的ID 可能需要更新
+		// The ID of the pattern may not necessarily be included in the original text and may need to be updated
 		this.insertPatternID()
-		// 通知卡片一切就绪 准备更新原文
+		// Notification card everything is ready to update the original text
 		await this.card.commitFile()
 	}
-	// 展示组件
+	// display component
 	Component = (props: PatternProps): JSX.Element => {
 		return <LinePatternComponent reverse={this.reverse} front={this.front} back={this.back} path={this.card.note.path} patternProps={props}></LinePatternComponent>
 	}
@@ -105,7 +105,7 @@ class LinePatternComponent extends React.Component<singleLinePatternComponentPro
 			markdownDivFront: markdownDivFront,
 			markdownDivBack: markdownDivBack,
 		})
-		// 如果是单词 则尝试调用有道发音
+		// If it is a word, try to call Youdao pronunciation
 		let ttstext = ""
 		if (this.props.reverse==false) {
 			ttstext = this.props.front
@@ -174,9 +174,9 @@ export class SingleLineParser implements PatternParser {
 
 export class MultiLineParser implements PatternParser {
 	Parse(card: Card): Pattern[] {
-		// 注意不需要gm
+		// Note that gm is not required
 		let reg = /^((?:(?!\? ?).+\n)+)\?( #.+)?\n((?:.+\n?)+)$/
-		// 捕获不包含? 开头的连续行 然后捕获标签 然后捕获剩余行
+		// captures continuation lines that do not start with ? then captures tabs then captures remaining lines
 		let results: Pattern[] = []
 		for (let body of card.bodyList) {
 			let regArr = reg.exec(body)

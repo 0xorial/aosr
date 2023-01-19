@@ -10,7 +10,7 @@ export type PatternProps ={
 	showAns:boolean
 }
 
-// 卡片的展示模式
+// card presentation mode
 export abstract class Pattern {
 	TagID: string;
 	private pcard: Card;

@@ -1,8 +1,8 @@
 import { TFile } from 'obsidian';
 import { Card } from "./card";
 import { NewCardSearch } from "./cardSearch";
-// 当卡片更新时 更新所组织的卡片
-// 当文件更新时 更新卡片
+// Update organized cards when cards are updated
+// Update card when file is updated
 export interface CardsWatcher {
 	getLiveCard(id: string): Promise<Card | undefined>
 }
@@ -33,7 +33,7 @@ class defaultCardsWatcher implements CardsWatcher {
 			}
 		}
 	}
-	// 先记录全量卡片
+	// Record all cards first
 	constructor(cards: Card[]) {
 		this.cardMapByNote = new Map
 		this.addCards(cards)
@@ -47,7 +47,7 @@ class defaultCardsWatcher implements CardsWatcher {
 			this.cardMapByNote.get(card.note.path)?.set(card.ID, card)
 		}
 	}
-	// 更新某个文件的卡片
+	// Update a card for a file
 	private async researchFile(file: TFile): Promise<number> {
 		let cardsMap = this.cardMapByNote.get(file.path)
 		if (cardsMap) {

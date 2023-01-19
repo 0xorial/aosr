@@ -8,7 +8,7 @@ const imageExt = ['bmp', 'png', 'jpg', 'jpeg', 'gif', 'svg'];
 const audioExt = ['mp3', 'wav', 'm4a', '3gp', 'flac', 'ogg', 'oga'];
 const videoExt = ['mp4', 'webm', 'ogv'];
 
-// obsidian api不支持嵌入图片音频视频 包装函数实现这部分功能
+// The obsidian api does not support embedding images, audio and video. The wrapper function realizes this part of the function
 export async function renderMarkdown(markdown: string, el: HTMLDivElement, sourcePath: string, component: Component): Promise<void> {
     el.empty()
     try {

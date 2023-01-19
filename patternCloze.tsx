@@ -42,9 +42,9 @@ class multiclozePattern extends Pattern {
 }
 
 class clozePattern extends Pattern {
-    text: string // 整段文本
-    clozeOriginal: string // 带==和标签的完形文本
-    clozeInner: string // ==内部的文本
+    text: string // whole text
+    clozeOriginal: string // Gestalt text with == and tags
+    clozeInner: string // ==text inside
     originalID: string
     async SubmitOpt(opt: Operation): Promise<void> {
         this.card.getSchedule(this.TagID).apply(opt)
