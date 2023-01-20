@@ -21,7 +21,7 @@ import {
   ReviewEnum,
   ReviewOpt,
 } from 'schedule';
-import LinearProgress, {} from '@mui/material/LinearProgress';
+import LinearProgress from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
 
 function LinearProgressWithLabel(props: { value1: number; value2: number }) {
@@ -160,18 +160,55 @@ function ReviewingHeader({
   );
 }
 
-function PatternComponent({
+function ReviewCard({
   p,
   view,
-  showAnswer,
+  submit,
 }: {
-  p?: Pattern;
+  p: Pattern;
   view: ItemView;
-  showAnswer: boolean;
+  submit: (r: ReviewOpt) => void;
 }) {
-  if (!p) return <div></div>;
+  const [showAnswer, setShowAnswer] = React.useState(false);
 
-  return <p.Component view={view} showAns={showAnswer}></p.Component>;
+  const getOptDate = (opt: ReviewEnum): string => {
+    let date = p?.schedule.CalcNextTime(opt);
+    return date?.fromNow() || '';
+  };
+
+  return (
+    <>
+      <p.Component view={view} showAns={showAnswer}></p.Component>
+      {!showAnswer && (
+        <Button onClick={() => setShowAnswer(true)}>Show answer</Button>
+      )}
+      {showAnswer && (
+        <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
+          <Button
+            color="error"
+            size="large"
+            onClick={() => submit(new ReviewOpt(ReviewEnum.FORGET))}
+          >
+            Did not remember
+          </Button>
+          <Button
+            onClick={() => submit(new ReviewOpt(ReviewEnum.HARD))}
+            color="warning"
+            size="large"
+          >
+            Hard {getOptDate(ReviewEnum.HARD)}
+          </Button>
+          <Button
+            onClick={() => submit(new ReviewOpt(ReviewEnum.EASY))}
+            color="success"
+            size="large"
+          >
+            Easy {getOptDate(ReviewEnum.HARD)}
+          </Button>
+        </Stack>
+      )}
+    </>
+  );
 }
 
 function Reviewing2({
@@ -184,13 +221,23 @@ function Reviewing2({
   const [total, setTotal] = React.useState(1);
   const [nowPattern, setNowPattern] = React.useState<Pattern>();
   const [lastPattern, setLastPattern] = React.useState<Pattern>();
-  const [showAnswer, setShowAnswer] = React.useState(false);
-  const [mark, setMark] = React.useState<markEnum>();
 
   const patternIter = React.useMemo(
     () => arrangement.PatternSequence(arrangeName),
     [arrangeName, arrangement]
   );
+
+  React.useEffect(async () => {
+    let result = await patternIter.next();
+    if (result.done) {
+      goStage(ReviewStage.Loading);
+      return;
+    }
+    setIndex(result.value.index);
+    setTotal(result.value.total);
+    setNowPattern(result.value.pattern);
+    patternIter.next();
+  }, [patternIter]);
 
   const next = async () => {
     let result = await patternIter.next();
@@ -207,24 +254,6 @@ function Reviewing2({
   const submit = async (opt: Operation) => {
     await nowPattern?.SubmitOpt(opt);
     await next();
-    setShowAnswer(true);
-  };
-  const getOptDate = (opt: ReviewEnum): string => {
-    let date = nowPattern?.schedule.CalcNextTime(opt);
-    return date?.fromNow() || '';
-  };
-  const getOptRate = (opt: LearnEnum): string => {
-    if (!nowPattern) {
-      return '';
-    }
-    let rate = nowPattern.schedule.CalcLearnRate(opt);
-    rate = rate * 100;
-    return `${rate.toFixed(0)}%`;
-  };
-
-  const markAs = (mark: markEnum) => {
-    setShowAnswer(true);
-    setMark(mark);
   };
 
   return (
@@ -235,131 +264,10 @@ function Reviewing2({
         nowPattern={nowPattern}
         lastPattern={lastPattern}
       />
-      <Box sx={{ minHeight: 135 }}>
-        <PatternComponent showAnswer={showAnswer} view={view} p={nowPattern} />
-      </Box>
-      {!showAnswer && (
-        <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
-          <Button
-            color="error"
-            size="large"
-            onClick={() => markAs(markEnum.FORGET)}
-          >
-            Forget
-          </Button>
-          <Button
-            color="info"
-            size="large"
-            onClick={() => markAs(markEnum.NOTSURE)}
-          >
-            Not Sure
-          </Button>
-          <Button
-            color="success"
-            size="large"
-            onClick={() => markAs(markEnum.KNOWN)}
-          >
-            Known
-          </Button>
-        </Stack>
-      )}
-      {showAnswer && arrangeName != 'learn' && (
-        <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
-          {mark == markEnum.FORGET && (
-            <Button
-              color="error"
-              size="large"
-              onClick={() => submit(new ReviewOpt(ReviewEnum.FORGET))}
-            >
-              Forget {getOptDate(ReviewEnum.FORGET)}
-            </Button>
-          )}
-          {mark == markEnum.NOTSURE && (
-            <Button
-              onClick={() => submit(new ReviewOpt(ReviewEnum.HARD))}
-              color="error"
-              size="large"
-            >
-              Hard {getOptDate(ReviewEnum.HARD)}
-            </Button>
-          )}
-          {mark == markEnum.NOTSURE && (
-            <Button
-              color="info"
-              size="large"
-              onClick={() => submit(new ReviewOpt(ReviewEnum.FAIR))}
-            >
-              Fair {getOptDate(ReviewEnum.FAIR)}
-            </Button>
-          )}
-          {mark == markEnum.KNOWN && (
-            <Button
-              onClick={() => submit(new ReviewOpt(ReviewEnum.FORGET))}
-              color="error"
-              size="large"
-            >
-              Wrong {getOptDate(ReviewEnum.FORGET)}
-            </Button>
-          )}
-          {mark == markEnum.KNOWN && (
-            <Button
-              color="success"
-              size="large"
-              onClick={() => submit(new ReviewOpt(ReviewEnum.EASY))}
-            >
-              Easy {getOptDate(ReviewEnum.EASY)}
-            </Button>
-          )}
-        </Stack>
-      )}
-      {showAnswer && arrangeName == 'learn' && (
-        <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
-          {mark == markEnum.FORGET && (
-            <Button
-              color="error"
-              size="large"
-              onClick={() => submit(new LearnOpt(LearnEnum.FORGET))}
-            >
-              Forget {getOptRate(LearnEnum.FORGET)}
-            </Button>
-          )}
-          {mark == markEnum.NOTSURE && (
-            <Button
-              color="error"
-              size="large"
-              onClick={() => submit(new LearnOpt(LearnEnum.HARD))}
-            >
-              Hard {getOptRate(LearnEnum.HARD)}
-            </Button>
-          )}
-          {mark == markEnum.NOTSURE && (
-            <Button
-              color="info"
-              size="large"
-              onClick={() => submit(new LearnOpt(LearnEnum.FAIR))}
-            >
-              Fair {getOptRate(LearnEnum.FAIR)}
-            </Button>
-          )}
-          {mark == markEnum.KNOWN && (
-            <Button
-              color="error"
-              size="large"
-              onClick={() => submit(new LearnOpt(LearnEnum.FORGET))}
-            >
-              Wrong {getOptRate(LearnEnum.FORGET)}
-            </Button>
-          )}
-          {mark == markEnum.KNOWN && (
-            <Button
-              color="info"
-              size="large"
-              onClick={() => submit(new LearnOpt(LearnEnum.EASY))}
-            >
-              Easy {getOptRate(LearnEnum.EASY)}
-            </Button>
-          )}
-        </Stack>
+      {nowPattern && (
+        <Box sx={{ minHeight: 135 }}>
+          <ReviewCard p={nowPattern} submit={submit} view={view} />
+        </Box>
       )}
     </Box>
   );
