@@ -71,80 +71,6 @@ type ReviewingState = {
   total: number;
 };
 
-type DelayButtonState = {
-  leftTime: number;
-  loading: boolean;
-};
-
-type DelayButtonProps = {
-  initTime: number;
-  onClick: React.MouseEventHandler<HTMLButtonElement>;
-  color:
-    | 'inherit'
-    | 'primary'
-    | 'secondary'
-    | 'success'
-    | 'error'
-    | 'info'
-    | 'warning'
-    | undefined;
-  size: 'small' | 'medium' | 'large' | undefined;
-  children?: React.ReactNode;
-};
-
-class DelayButton extends React.Component<DelayButtonProps, DelayButtonState> {
-  timeID: NodeJS.Timer;
-  tick = () => {
-    if (this.state.leftTime <= 0) {
-      this.setState({
-        loading: false,
-      });
-      return;
-    }
-    this.setState({
-      leftTime: this.state.leftTime - 0.1,
-    });
-  };
-  componentDidMount(): void {
-    this.timeID = setInterval(this.tick, 100);
-  }
-  componentWillUnmount(): void {
-    clearInterval(this.timeID);
-  }
-  constructor(props: DelayButtonProps) {
-    super(props);
-    this.state = {
-      leftTime: this.props.initTime,
-      loading: true,
-    };
-  }
-  render(): React.ReactNode {
-    return (
-      <LoadingButton
-        loading={this.state.loading}
-        loadingPosition="start"
-        startIcon={<SaveIcon />}
-        color={this.props.color}
-        size={this.props.size}
-        sx={{
-          ':disabled': {
-            color: 'rgba(128,128,128,0.5)',
-          },
-        }}
-        loadingIndicator={
-          <CircularProgress
-            size={16}
-            variant="determinate"
-            value={100 - (this.state.leftTime / this.props.initTime) * 100}
-          />
-        }
-        onClick={this.props.onClick}
-      >
-        {this.props.children}
-      </LoadingButton>
-    );
-  }
-}
 
 class Reviewing extends React.Component<ReviewingProps, ReviewingState> {
   initFlag: boolean;
@@ -310,22 +236,20 @@ class Reviewing extends React.Component<ReviewingProps, ReviewingState> {
         </Box>
         {!this.state.showAns && (
           <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
-            <DelayButton
-              initTime={8}
+            <Button
               color="error"
               size="large"
               onClick={() => this.markAs(markEnum.FORGET)}
             >
               Forget
-            </DelayButton>
-            <DelayButton
-              initTime={3}
+            </Button>
+            <Button
               color="info"
               size="large"
               onClick={() => this.markAs(markEnum.NOTSURE)}
             >
               Not Sure
-            </DelayButton>
+            </Button>
             <Button
               color="success"
               size="large"
@@ -338,44 +262,40 @@ class Reviewing extends React.Component<ReviewingProps, ReviewingState> {
         {this.state.showAns && this.props.arrangeName != 'learn' && (
           <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
             {this.state.mark == markEnum.FORGET && (
-              <DelayButton
-                initTime={10}
+              <Button
                 color="error"
                 size="large"
                 onClick={() => this.submit(new ReviewOpt(ReviewEnum.FORGET))}
               >
                 Forget {this.getOptDate(ReviewEnum.FORGET)}
-              </DelayButton>
+              </Button>
             )}
             {this.state.mark == markEnum.NOTSURE && (
-              <DelayButton
-                initTime={15}
+              <Button
                 onClick={() => this.submit(new ReviewOpt(ReviewEnum.HARD))}
                 color="error"
                 size="large"
               >
                 Hard {this.getOptDate(ReviewEnum.HARD)}
-              </DelayButton>
+              </Button>
             )}
             {this.state.mark == markEnum.NOTSURE && (
-              <DelayButton
-                initTime={3}
+              <Button
                 color="info"
                 size="large"
                 onClick={() => this.submit(new ReviewOpt(ReviewEnum.FAIR))}
               >
                 Fair {this.getOptDate(ReviewEnum.FAIR)}
-              </DelayButton>
+              </Button>
             )}
             {this.state.mark == markEnum.KNOWN && (
-              <DelayButton
-                initTime={30}
+              <Button
                 onClick={() => this.submit(new ReviewOpt(ReviewEnum.FORGET))}
                 color="error"
                 size="large"
               >
                 Wrong {this.getOptDate(ReviewEnum.FORGET)}
-              </DelayButton>
+              </Button>
             )}
             {this.state.mark == markEnum.KNOWN && (
               <Button
@@ -391,44 +311,40 @@ class Reviewing extends React.Component<ReviewingProps, ReviewingState> {
         {this.state.showAns && this.props.arrangeName == 'learn' && (
           <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
             {this.state.mark == markEnum.FORGET && (
-              <DelayButton
-                initTime={10}
+              <Button
                 color="error"
                 size="large"
                 onClick={() => this.submit(new LearnOpt(LearnEnum.FORGET))}
               >
                 Forget {this.getOptRate(LearnEnum.FORGET)}
-              </DelayButton>
+              </Button>
             )}
             {this.state.mark == markEnum.NOTSURE && (
-              <DelayButton
-                initTime={15}
+              <Button
                 color="error"
                 size="large"
                 onClick={() => this.submit(new LearnOpt(LearnEnum.HARD))}
               >
                 Hard {this.getOptRate(LearnEnum.HARD)}
-              </DelayButton>
+              </Button>
             )}
             {this.state.mark == markEnum.NOTSURE && (
-              <DelayButton
-                initTime={3}
+              <Button
                 color="info"
                 size="large"
                 onClick={() => this.submit(new LearnOpt(LearnEnum.FAIR))}
               >
                 Fair {this.getOptRate(LearnEnum.FAIR)}
-              </DelayButton>
+              </Button>
             )}
             {this.state.mark == markEnum.KNOWN && (
-              <DelayButton
-                initTime={30}
+              <Button
                 color="error"
                 size="large"
                 onClick={() => this.submit(new LearnOpt(LearnEnum.FORGET))}
               >
                 Wrong {this.getOptRate(LearnEnum.FORGET)}
-              </DelayButton>
+              </Button>
             )}
             {this.state.mark == markEnum.KNOWN && (
               <Button
