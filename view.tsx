@@ -64,51 +64,26 @@ enum markEnum {
 
 type ReviewingState = {
   nowPattern: Pattern | undefined;
-  showAns: boolean;
+  showAnswer: boolean;
   mark: markEnum;
   patternIter: AsyncGenerator<PatternIter, boolean, unknown>;
   index: number;
   total: number;
 };
 
-
-class Reviewing extends React.Component<ReviewingProps, ReviewingState> {
-  initFlag: boolean;
-  lastPattern: Pattern | undefined;
-  constructor(props: ReviewingProps) {
-    super(props);
-    this.state = {
-      nowPattern: undefined,
-      showAns: false,
-      patternIter: this.props.arrangement.PatternSequence(
-        this.props.arrangeName
-      ),
-      mark: markEnum.NOTSURE,
-      index: 0,
-      total: 1,
-    };
-    this.initFlag = false;
-  }
-  async componentDidMount() {
-    if (!this.initFlag) {
-      this.initFlag = true;
-      await this.next();
-    }
-  }
-  next = async () => {
-    this.lastPattern = this.state.nowPattern;
-    let result = await this.state.patternIter.next();
-    if (result.done) {
-      this.props.goStage(ReviewStage.Loading);
-      return;
-    }
-    this.setState({
-      nowPattern: result.value.pattern,
-      index: result.value.index,
-      total: result.value.total,
-    });
-  };
-  openPatternFile = async (pattern: Pattern | undefined) => {
+function ReviewingHeader({
+  index,
+  total,
+  nowPattern,
+  lastPattern,
+}: {
+  index: number;
+  total: number;
+  nowPattern?: Pattern;
+  lastPattern?: Pattern;
+}) {
+  
+  const openPatternFile = async (pattern: Pattern | undefined) => {
     if (!pattern) {
       return;
     }
@@ -149,12 +124,91 @@ class Reviewing extends React.Component<ReviewingProps, ReviewingState> {
       true
     );
   };
+
+  const getLastTime = (): string => {
+    if (nowPattern?.schedule?.LearnInfo.IsNew) {
+      return '';
+    }
+    let date = nowPattern?.schedule.LastTime;
+    return date?.fromNow() || '';
+  };
+
+  return (
+    <>
+      <LinearProgressWithLabel value1={index} value2={total} />
+      <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
+        <Button size="large" onClick={() => openPatternFile(nowPattern)}>
+          Open File
+        </Button>
+        <Button size="large" onClick={() => openPatternFile(lastPattern)}>
+          Open Last
+        </Button>
+        <Stack spacing={2} direction="row">
+          {getLastTime() && (
+            <Chip
+              sx={{
+                color: 'var(--text-normal)',
+              }}
+              label={getLastTime()}
+            />
+          )}
+          {nowPattern && (
+            <Chip
+              sx={{
+                color: 'var(--text-normal)',
+              }}
+              label={`ease: ${nowPattern?.schedule.Ease}`}
+            />
+          )}
+        </Stack>
+      </Stack>
+    </>
+  );
+}
+
+class Reviewing extends React.Component<ReviewingProps, ReviewingState> {
+  initFlag: boolean;
+  lastPattern: Pattern | undefined;
+  constructor(props: ReviewingProps) {
+    super(props);
+    this.state = {
+      nowPattern: undefined,
+      showAnswer: false,
+      patternIter: this.props.arrangement.PatternSequence(
+        this.props.arrangeName
+      ),
+      mark: markEnum.NOTSURE,
+      index: 0,
+      total: 1,
+    };
+    this.initFlag = false;
+  }
+  async componentDidMount() {
+    if (!this.initFlag) {
+      this.initFlag = true;
+      await this.next();
+    }
+  }
+  next = async () => {
+    this.lastPattern = this.state.nowPattern;
+    let result = await this.state.patternIter.next();
+    if (result.done) {
+      this.props.goStage(ReviewStage.Loading);
+      return;
+    }
+    this.setState({
+      nowPattern: result.value.pattern,
+      index: result.value.index,
+      total: result.value.total,
+    });
+  };
+  
   PatternComponent = () => {
     if (this.state.nowPattern) {
       return (
         <this.state.nowPattern.Component
           view={this.props.view}
-          showAns={this.state.showAns}
+          showAns={this.state.showAnswer}
         ></this.state.nowPattern.Component>
       );
     }
@@ -164,7 +218,7 @@ class Reviewing extends React.Component<ReviewingProps, ReviewingState> {
     await this.state.nowPattern?.SubmitOpt(opt);
     await this.next();
     this.setState({
-      showAns: false,
+      showAnswer: false,
     });
   }
   getOptDate = (opt: ReviewEnum): string => {
@@ -179,62 +233,26 @@ class Reviewing extends React.Component<ReviewingProps, ReviewingState> {
     rate = rate * 100;
     return `${rate.toFixed(0)}%`;
   };
-  getLastTime = (): string => {
-    if (this.state.nowPattern?.schedule?.LearnInfo.IsNew) {
-      return '';
-    }
-    let date = this.state.nowPattern?.schedule.LastTime;
-    return date?.fromNow() || '';
-  };
+
   markAs = (mark: markEnum) => {
     this.setState({
-      showAns: true,
+      showAnswer: true,
       mark: mark,
     });
   };
   render() {
     return (
       <Box>
-        <LinearProgressWithLabel
-          value1={this.state.index}
-          value2={this.state.total}
+        <ReviewingHeader
+          index={this.state.index}
+          total={this.state.total}
+          nowPattern={this.state.nowPattern}
+          lastPattern={this.lastPattern}
         />
-        <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
-          <Button
-            size="large"
-            onClick={() => this.openPatternFile(this.state.nowPattern)}
-          >
-            Open File
-          </Button>
-          <Button
-            size="large"
-            onClick={() => this.openPatternFile(this.lastPattern)}
-          >
-            Open Last
-          </Button>
-          <Stack spacing={2} direction="row">
-            {this.getLastTime() && (
-              <Chip
-                sx={{
-                  color: 'var(--text-normal)',
-                }}
-                label={this.getLastTime()}
-              />
-            )}
-            {this.state.nowPattern && (
-              <Chip
-                sx={{
-                  color: 'var(--text-normal)',
-                }}
-                label={`ease: ${this.state.nowPattern?.schedule.Ease}`}
-              />
-            )}
-          </Stack>
-        </Stack>
         <Box sx={{ minHeight: 135 }}>
           <this.PatternComponent></this.PatternComponent>
         </Box>
-        {!this.state.showAns && (
+        {!this.state.showAnswer && (
           <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
             <Button
               color="error"
@@ -259,7 +277,7 @@ class Reviewing extends React.Component<ReviewingProps, ReviewingState> {
             </Button>
           </Stack>
         )}
-        {this.state.showAns && this.props.arrangeName != 'learn' && (
+        {this.state.showAnswer && this.props.arrangeName != 'learn' && (
           <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
             {this.state.mark == markEnum.FORGET && (
               <Button
@@ -308,7 +326,7 @@ class Reviewing extends React.Component<ReviewingProps, ReviewingState> {
             )}
           </Stack>
         )}
-        {this.state.showAns && this.props.arrangeName == 'learn' && (
+        {this.state.showAnswer && this.props.arrangeName == 'learn' && (
           <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
             {this.state.mark == markEnum.FORGET && (
               <Button
