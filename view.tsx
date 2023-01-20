@@ -1,5 +1,3 @@
-import SaveIcon from '@mui/icons-material/Save';
-import LoadingButton from '@mui/lab/LoadingButton';
 import {
   Box,
   Chip,
@@ -11,9 +9,8 @@ import {
   Stack,
 } from '@mui/material';
 import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
 import { Arrangement, PatternIter } from 'arrangement';
-import { EditorPosition, ItemView, MarkdownView } from 'obsidian';
+import { EditorPosition, ItemView, MarkdownView, View } from 'obsidian';
 import { Pattern } from 'Pattern';
 import * as React from 'react';
 import { createRoot, Root } from 'react-dom/client';
@@ -24,9 +21,7 @@ import {
   ReviewEnum,
   ReviewOpt,
 } from 'schedule';
-import LinearProgress, {
-  LinearProgressProps,
-} from '@mui/material/LinearProgress';
+import LinearProgress, {} from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
 
 function LinearProgressWithLabel(props: { value1: number; value2: number }) {
@@ -82,7 +77,6 @@ function ReviewingHeader({
   nowPattern?: Pattern;
   lastPattern?: Pattern;
 }) {
-  
   const openPatternFile = async (pattern: Pattern | undefined) => {
     if (!pattern) {
       return;
@@ -166,218 +160,209 @@ function ReviewingHeader({
   );
 }
 
-class Reviewing extends React.Component<ReviewingProps, ReviewingState> {
-  initFlag: boolean;
-  lastPattern: Pattern | undefined;
-  constructor(props: ReviewingProps) {
-    super(props);
-    this.state = {
-      nowPattern: undefined,
-      showAnswer: false,
-      patternIter: this.props.arrangement.PatternSequence(
-        this.props.arrangeName
-      ),
-      mark: markEnum.NOTSURE,
-      index: 0,
-      total: 1,
-    };
-    this.initFlag = false;
-  }
-  async componentDidMount() {
-    if (!this.initFlag) {
-      this.initFlag = true;
-      await this.next();
-    }
-  }
-  next = async () => {
-    this.lastPattern = this.state.nowPattern;
-    let result = await this.state.patternIter.next();
+function PatternComponent({
+  p,
+  view,
+  showAnswer,
+}: {
+  p?: Pattern;
+  view: ItemView;
+  showAnswer: boolean;
+}) {
+  if (!p) return <div></div>;
+
+  return <p.Component view={view} showAns={showAnswer}></p.Component>;
+}
+
+function Reviewing2({
+  arrangeName,
+  arrangement,
+  goStage,
+  view,
+}: ReviewingProps) {
+  const [index, setIndex] = React.useState(0);
+  const [total, setTotal] = React.useState(1);
+  const [nowPattern, setNowPattern] = React.useState<Pattern>();
+  const [lastPattern, setLastPattern] = React.useState<Pattern>();
+  const [showAnswer, setShowAnswer] = React.useState(false);
+  const [mark, setMark] = React.useState<markEnum>();
+
+  const patternIter = React.useMemo(
+    () => arrangement.PatternSequence(arrangeName),
+    [arrangeName, arrangement]
+  );
+
+  const next = async () => {
+    let result = await patternIter.next();
     if (result.done) {
-      this.props.goStage(ReviewStage.Loading);
+      goStage(ReviewStage.Loading);
       return;
     }
-    this.setState({
-      nowPattern: result.value.pattern,
-      index: result.value.index,
-      total: result.value.total,
-    });
+    setLastPattern(nowPattern);
+    setIndex(result.value.index);
+    setTotal(result.value.total);
+    setNowPattern(result.value.pattern);
   };
-  
-  PatternComponent = () => {
-    if (this.state.nowPattern) {
-      return (
-        <this.state.nowPattern.Component
-          view={this.props.view}
-          showAns={this.state.showAnswer}
-        ></this.state.nowPattern.Component>
-      );
-    }
-    return <div></div>;
+
+  const submit = async (opt: Operation) => {
+    await nowPattern?.SubmitOpt(opt);
+    await next();
+    setShowAnswer(true);
   };
-  async submit(opt: Operation) {
-    await this.state.nowPattern?.SubmitOpt(opt);
-    await this.next();
-    this.setState({
-      showAnswer: false,
-    });
-  }
-  getOptDate = (opt: ReviewEnum): string => {
-    let date = this.state.nowPattern?.schedule.CalcNextTime(opt);
+  const getOptDate = (opt: ReviewEnum): string => {
+    let date = nowPattern?.schedule.CalcNextTime(opt);
     return date?.fromNow() || '';
   };
-  getOptRate = (opt: LearnEnum): string => {
-    if (!this.state.nowPattern) {
+  const getOptRate = (opt: LearnEnum): string => {
+    if (!nowPattern) {
       return '';
     }
-    let rate = this.state.nowPattern.schedule.CalcLearnRate(opt);
+    let rate = nowPattern.schedule.CalcLearnRate(opt);
     rate = rate * 100;
     return `${rate.toFixed(0)}%`;
   };
 
-  markAs = (mark: markEnum) => {
-    this.setState({
-      showAnswer: true,
-      mark: mark,
-    });
+  const markAs = (mark: markEnum) => {
+    setShowAnswer(true);
+    setMark(mark);
   };
-  render() {
-    return (
-      <Box>
-        <ReviewingHeader
-          index={this.state.index}
-          total={this.state.total}
-          nowPattern={this.state.nowPattern}
-          lastPattern={this.lastPattern}
-        />
-        <Box sx={{ minHeight: 135 }}>
-          <this.PatternComponent></this.PatternComponent>
-        </Box>
-        {!this.state.showAnswer && (
-          <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
+
+  return (
+    <Box>
+      <ReviewingHeader
+        index={index}
+        total={total}
+        nowPattern={nowPattern}
+        lastPattern={lastPattern}
+      />
+      <Box sx={{ minHeight: 135 }}>
+        <PatternComponent showAnswer={showAnswer} view={view} p={nowPattern} />
+      </Box>
+      {!showAnswer && (
+        <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
+          <Button
+            color="error"
+            size="large"
+            onClick={() => markAs(markEnum.FORGET)}
+          >
+            Forget
+          </Button>
+          <Button
+            color="info"
+            size="large"
+            onClick={() => markAs(markEnum.NOTSURE)}
+          >
+            Not Sure
+          </Button>
+          <Button
+            color="success"
+            size="large"
+            onClick={() => markAs(markEnum.KNOWN)}
+          >
+            Known
+          </Button>
+        </Stack>
+      )}
+      {showAnswer && arrangeName != 'learn' && (
+        <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
+          {mark == markEnum.FORGET && (
             <Button
               color="error"
               size="large"
-              onClick={() => this.markAs(markEnum.FORGET)}
+              onClick={() => submit(new ReviewOpt(ReviewEnum.FORGET))}
             >
-              Forget
+              Forget {getOptDate(ReviewEnum.FORGET)}
             </Button>
+          )}
+          {mark == markEnum.NOTSURE && (
+            <Button
+              onClick={() => submit(new ReviewOpt(ReviewEnum.HARD))}
+              color="error"
+              size="large"
+            >
+              Hard {getOptDate(ReviewEnum.HARD)}
+            </Button>
+          )}
+          {mark == markEnum.NOTSURE && (
             <Button
               color="info"
               size="large"
-              onClick={() => this.markAs(markEnum.NOTSURE)}
+              onClick={() => submit(new ReviewOpt(ReviewEnum.FAIR))}
             >
-              Not Sure
+              Fair {getOptDate(ReviewEnum.FAIR)}
             </Button>
+          )}
+          {mark == markEnum.KNOWN && (
+            <Button
+              onClick={() => submit(new ReviewOpt(ReviewEnum.FORGET))}
+              color="error"
+              size="large"
+            >
+              Wrong {getOptDate(ReviewEnum.FORGET)}
+            </Button>
+          )}
+          {mark == markEnum.KNOWN && (
             <Button
               color="success"
               size="large"
-              onClick={() => this.markAs(markEnum.KNOWN)}
+              onClick={() => submit(new ReviewOpt(ReviewEnum.EASY))}
             >
-              Known
+              Easy {getOptDate(ReviewEnum.EASY)}
             </Button>
-          </Stack>
-        )}
-        {this.state.showAnswer && this.props.arrangeName != 'learn' && (
-          <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
-            {this.state.mark == markEnum.FORGET && (
-              <Button
-                color="error"
-                size="large"
-                onClick={() => this.submit(new ReviewOpt(ReviewEnum.FORGET))}
-              >
-                Forget {this.getOptDate(ReviewEnum.FORGET)}
-              </Button>
-            )}
-            {this.state.mark == markEnum.NOTSURE && (
-              <Button
-                onClick={() => this.submit(new ReviewOpt(ReviewEnum.HARD))}
-                color="error"
-                size="large"
-              >
-                Hard {this.getOptDate(ReviewEnum.HARD)}
-              </Button>
-            )}
-            {this.state.mark == markEnum.NOTSURE && (
-              <Button
-                color="info"
-                size="large"
-                onClick={() => this.submit(new ReviewOpt(ReviewEnum.FAIR))}
-              >
-                Fair {this.getOptDate(ReviewEnum.FAIR)}
-              </Button>
-            )}
-            {this.state.mark == markEnum.KNOWN && (
-              <Button
-                onClick={() => this.submit(new ReviewOpt(ReviewEnum.FORGET))}
-                color="error"
-                size="large"
-              >
-                Wrong {this.getOptDate(ReviewEnum.FORGET)}
-              </Button>
-            )}
-            {this.state.mark == markEnum.KNOWN && (
-              <Button
-                color="success"
-                size="large"
-                onClick={() => this.submit(new ReviewOpt(ReviewEnum.EASY))}
-              >
-                Easy {this.getOptDate(ReviewEnum.EASY)}
-              </Button>
-            )}
-          </Stack>
-        )}
-        {this.state.showAnswer && this.props.arrangeName == 'learn' && (
-          <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
-            {this.state.mark == markEnum.FORGET && (
-              <Button
-                color="error"
-                size="large"
-                onClick={() => this.submit(new LearnOpt(LearnEnum.FORGET))}
-              >
-                Forget {this.getOptRate(LearnEnum.FORGET)}
-              </Button>
-            )}
-            {this.state.mark == markEnum.NOTSURE && (
-              <Button
-                color="error"
-                size="large"
-                onClick={() => this.submit(new LearnOpt(LearnEnum.HARD))}
-              >
-                Hard {this.getOptRate(LearnEnum.HARD)}
-              </Button>
-            )}
-            {this.state.mark == markEnum.NOTSURE && (
-              <Button
-                color="info"
-                size="large"
-                onClick={() => this.submit(new LearnOpt(LearnEnum.FAIR))}
-              >
-                Fair {this.getOptRate(LearnEnum.FAIR)}
-              </Button>
-            )}
-            {this.state.mark == markEnum.KNOWN && (
-              <Button
-                color="error"
-                size="large"
-                onClick={() => this.submit(new LearnOpt(LearnEnum.FORGET))}
-              >
-                Wrong {this.getOptRate(LearnEnum.FORGET)}
-              </Button>
-            )}
-            {this.state.mark == markEnum.KNOWN && (
-              <Button
-                color="info"
-                size="large"
-                onClick={() => this.submit(new LearnOpt(LearnEnum.EASY))}
-              >
-                Easy {this.getOptRate(LearnEnum.EASY)}
-              </Button>
-            )}
-          </Stack>
-        )}
-      </Box>
-    );
-  }
+          )}
+        </Stack>
+      )}
+      {showAnswer && arrangeName == 'learn' && (
+        <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
+          {mark == markEnum.FORGET && (
+            <Button
+              color="error"
+              size="large"
+              onClick={() => submit(new LearnOpt(LearnEnum.FORGET))}
+            >
+              Forget {getOptRate(LearnEnum.FORGET)}
+            </Button>
+          )}
+          {mark == markEnum.NOTSURE && (
+            <Button
+              color="error"
+              size="large"
+              onClick={() => submit(new LearnOpt(LearnEnum.HARD))}
+            >
+              Hard {getOptRate(LearnEnum.HARD)}
+            </Button>
+          )}
+          {mark == markEnum.NOTSURE && (
+            <Button
+              color="info"
+              size="large"
+              onClick={() => submit(new LearnOpt(LearnEnum.FAIR))}
+            >
+              Fair {getOptRate(LearnEnum.FAIR)}
+            </Button>
+          )}
+          {mark == markEnum.KNOWN && (
+            <Button
+              color="error"
+              size="large"
+              onClick={() => submit(new LearnOpt(LearnEnum.FORGET))}
+            >
+              Wrong {getOptRate(LearnEnum.FORGET)}
+            </Button>
+          )}
+          {mark == markEnum.KNOWN && (
+            <Button
+              color="info"
+              size="large"
+              onClick={() => submit(new LearnOpt(LearnEnum.EASY))}
+            >
+              Easy {getOptRate(LearnEnum.EASY)}
+            </Button>
+          )}
+        </Stack>
+      )}
+    </Box>
+  );
 }
 
 class LoadingComponent extends React.Component<any, any> {
@@ -505,12 +490,12 @@ class ReviewComponent extends React.Component<ReviewProps, ReviewState> {
     }
     if (this.state.stage == ReviewStage.Reviewing) {
       return (
-        <Reviewing
+        <Reviewing2
           arrangeName={this.state.arrangeName}
           arrangement={this.state.arrangement}
           goStage={this.goStage}
           view={this.props.view}
-        ></Reviewing>
+        ></Reviewing2>
       );
     }
   }
@@ -532,7 +517,7 @@ function App(props: props) {
 
 // Card review view
 export class ReviewView extends ItemView {
-  root: Root;
+  root?: Root;
   getViewType(): string {
     return VIEW_TYPE_REVIEW;
   }
@@ -545,6 +530,6 @@ export class ReviewView extends ItemView {
     this.root.render(<App view={this}></App>);
   }
   onunload(): void {
-    this.root.unmount();
+    this.root?.unmount();
   }
 }
