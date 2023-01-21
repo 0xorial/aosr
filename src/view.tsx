@@ -1,11 +1,11 @@
 import { Box, Chip, List, ListItem, ListItemButton, ListItemText, Paper, Stack } from '@mui/material';
 import Button from '@mui/material/Button';
-import { Arrangement } from 'src/arrangement';
+import { Arrangement } from 'src/old/arrangement';
 import { EditorPosition, ItemView, MarkdownView } from 'obsidian';
-import { Pattern } from 'src/Pattern';
+import { Pattern } from 'src/old/Pattern';
 import * as React from 'react';
 import { createRoot, Root } from 'react-dom/client';
-import { Operation, ReviewEnum, ReviewOpt } from 'src/schedule';
+import { Operation, ReviewEnum, ReviewOpt } from 'src/old/schedule';
 import LinearProgress from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
 import { useAsyncCallback } from './hooks/useAsyncCallback';

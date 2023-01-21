@@ -1,12 +1,12 @@
-import { Card } from 'src/card';
-import { CardIDTag } from 'src/cardHead';
-import { cyrb53 } from 'src/hash';
-import { PatternParser } from 'src/ParserCollection';
-import { Pattern, PatternProps, prettyText } from 'src/Pattern';
+import { Card } from 'src/old/card';
+import { CardIDTag } from 'src/old/cardHead';
+import { cyrb53 } from 'src/old/hash';
+import { PatternParser } from 'src/old/ParserCollection';
+import { Pattern, PatternProps, prettyText } from 'src/old/Pattern';
 import React from 'react';
-import { Operation } from 'src/schedule';
-import { GlobalSettings } from 'src/setting';
-import { TagParser } from 'src/tag';
+import { Operation } from 'src/old/schedule';
+import { GlobalSettings } from 'src/old/setting';
+import { TagParser } from 'src/old/tag';
 import { renderMarkdown } from './markdown';
 import { NodeContainer } from './nodeContainer';
 

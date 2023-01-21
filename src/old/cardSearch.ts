@@ -1,17 +1,14 @@
-import { AnnotationWrapper } from 'src/annotationParse';
-import { CardIDTag } from 'src/cardHead';
+import { AnnotationWrapper } from 'src/old/annotationParse';
+import { CardIDTag } from 'src/old/cardHead';
 import { TFile } from 'obsidian';
-import { TagParser } from 'src/tag';
+import { TagParser } from 'src/old/tag';
 import { Card, NewCard } from './card';
 
 // search results
-export class SearchResult {
+export type SearchResult = {
   AllCard: Card[];
   SearchName: string;
-  constructor() {
-    this.AllCard = [];
-  }
-}
+};
 
 // The card finder is responsible for searching for possible cards
 export interface cardSearcher {
@@ -29,8 +26,9 @@ class defaultCardSearch implements cardSearcher {
   // Matches all tags starting with the line up to the end of the paragraph
   private defaultRegText = String.raw`(^#tagName\b.*)\n((?:^.+$\n?)+)`;
   private matchReg: RegExp;
+
   async search(file?: TFile): Promise<SearchResult> {
-    const result = new SearchResult();
+    const result: SearchResult = { AllCard: [], SearchName: '' };
     result.SearchName = '#' + this.tagName;
     if (file) {
       await this.walkFileCard(file, (card) => {
@@ -45,12 +43,14 @@ class defaultCardSearch implements cardSearcher {
     }
     return result;
   }
+
   async walkVaultFile(callback: (note: TFile) => Promise<void>) {
     const notes: TFile[] = app.vault.getMarkdownFiles();
     for (const note of notes) {
       await callback(note);
     }
   }
+
   async walkFileCard(note: TFile, callback: (card: Card) => void) {
     const fileText: string = await app.vault.read(note);
     // workaround If there is no extra newline after the last card of the text, the regular expression cannot match
@@ -72,6 +72,7 @@ class defaultCardSearch implements cardSearcher {
       callback(card);
     }
   }
+
   constructor(tagName?: string) {
     if (tagName) {
       this.tagName = tagName;

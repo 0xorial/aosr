@@ -1,7 +1,7 @@
-import { AnnotationObject, AnnotationWrapper } from 'src/annotationParse';
-import { UpdateCardIDTag } from 'src/cardHead';
+import { AnnotationObject, AnnotationWrapper } from 'src/old/annotationParse';
+import { UpdateCardIDTag } from 'src/old/cardHead';
 import { TFile } from 'obsidian';
-import { CardSchedule, PatternSchedule } from 'src/schedule';
+import { CardSchedule, PatternSchedule } from 'src/old/schedule';
 import { cyrb53 } from './hash';
 import { ParserCollection } from './ParserCollection';
 import { Pattern } from './Pattern';

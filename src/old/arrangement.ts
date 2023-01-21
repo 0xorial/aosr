@@ -1,6 +1,6 @@
-import { NewCardSearch } from 'src/cardSearch';
-import { CardsWatcher, NewCardsWatch } from 'src/cardWatcher';
-import { Pattern } from 'src/Pattern';
+import { NewCardSearch } from 'src/old/cardSearch';
+import { CardsWatcher, NewCardsWatch } from 'src/old/cardWatcher';
+import { Pattern } from 'src/old/Pattern';
 
 class ArrangementItem {
   Name: string;

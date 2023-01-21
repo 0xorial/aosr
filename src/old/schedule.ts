@@ -1,4 +1,4 @@
-import { GlobalSettings } from 'src/setting';
+import { GlobalSettings } from 'src/old/setting';
 
 export enum ReviewEnum {
   // Won't
@@ -28,6 +28,7 @@ export abstract class Operation {}
 // review operation
 export class ReviewOpt extends Operation {
   value: ReviewEnum;
+
   constructor(value: ReviewEnum) {
     super();
     this.value = value;
@@ -37,6 +38,7 @@ export class ReviewOpt extends Operation {
 // learn to operate
 export class LearnOpt extends Operation {
   value: LearnEnum;
+
   constructor(value: LearnEnum) {
     super();
     this.value = value;
@@ -45,6 +47,7 @@ export class LearnOpt extends Operation {
 
 export interface scheduleCalc {
   get Gap(): moment.Duration;
+
   get Ease(): number;
 }
 
@@ -56,13 +59,19 @@ class LearnInfo {
 
 export interface scheduleArrange {
   get LastTime(): moment.Moment;
+
   get NextTime(): moment.Moment;
+
   get LearnedTime(): moment.Moment;
+
   get LearnInfo(): LearnInfo;
+
   // Update the review plan according to the operation
   apply(opt: Operation): void;
+
   // Get the time you need to review next time
   CalcNextTime(opt: ReviewEnum): moment.Moment;
+
   // Get the progress of learning
   CalcLearnRate(opt: LearnEnum): number;
 }
@@ -78,6 +87,7 @@ export interface PatternYaml {
   Learned: string | null;
   // The last time it was marked as forgotten, the number of times it was reviewed after that
   LearnedCount: number | null;
+
   // The schedule yaml format used to read the storage needs to copy the object
   copy(v: PatternYaml): void;
 }
@@ -97,39 +107,47 @@ export class defaultSchedule implements PatternSchedule {
     this.Learned = v.Learned;
     this.LearnedCount = v.LearnedCount;
   }
+
   private id: string;
   Last: string;
   Next: string;
   Opts: string;
   Learned: string | null;
   LearnedCount: number | null;
+
   get LearnedTime(): moment.Moment {
     if (!this.Learned) {
       return this.LastTime;
     }
     return window.moment(this.Learned, 'YYYY-MM-DD HH:mm:ss');
   }
+
   set LearnedTime(t: moment.Moment) {
     this.Learned = t.format('YYYY-MM-DD HH:mm:ss');
   }
+
   get LastTime(): moment.Moment {
     if (!this.Last) {
       return window.moment();
     }
     return window.moment(this.Last, 'YYYY-MM-DD HH:mm');
   }
+
   set LastTime(t: moment.Moment) {
     this.Last = t.format('YYYY-MM-DD HH:mm');
   }
+
   get NextTime(): moment.Moment {
     if (!this.Next) {
       return window.moment();
     }
     return window.moment(this.Next, 'YYYY-MM-DD HH:mm');
   }
+
   set NextTime(t: moment.Moment) {
     this.Next = t.format('YYYY-MM-DD HH:mm');
   }
+
   get OptArr(): ReviewEnum[] {
     const ret: ReviewEnum[] = [];
     for (const c of this.Opts) {
@@ -137,6 +155,7 @@ export class defaultSchedule implements PatternSchedule {
     }
     return ret;
   }
+
   get Gap(): moment.Duration {
     if (!this.Last) {
       return window.moment.duration(12, 'hours');
@@ -145,9 +164,11 @@ export class defaultSchedule implements PatternSchedule {
     const gap = window.moment.duration(now.diff(this.LastTime, 'seconds'), 'seconds');
     return gap;
   }
+
   get ID(): string {
     return this.id;
   }
+
   apply(opt: Operation) {
     if (opt instanceof ReviewOpt) {
       this.applyReviewResult(opt.value);
@@ -156,16 +177,19 @@ export class defaultSchedule implements PatternSchedule {
       this.applyLearnResult(opt.value);
     }
   }
+
   constructor(id: string) {
     this.id = id;
     this.Opts = '';
     this.Last = '';
     this.Next = '';
   }
+
   CalcLearnRate(opt: LearnEnum): number {
     const learnCount = this.getLearnResult(opt);
     return (learnCount + 2) / 4;
   }
+
   get LearnInfo(): LearnInfo {
     const info = new LearnInfo();
     info.IsNew = this.IsNew;
@@ -175,9 +199,13 @@ export class defaultSchedule implements PatternSchedule {
       return info;
     }
     if (!this.Opts) {
+      //
     } else if (this.Opts.at(-1) == String(ReviewEnum.EASY)) {
+      //
     } else if (this.Opts.at(-1) == String(ReviewEnum.FAIR)) {
+      //
     } else if (this.LearnedCount && this.LearnedCount >= 2) {
+      //
     } else {
       // Information in medium-term memory does not need to be learned
       // This part will be rescheduled after the medium-term memory is emptied from the memory area
@@ -190,6 +218,7 @@ export class defaultSchedule implements PatternSchedule {
     }
     return info;
   }
+
   private getLearnResult(opt: LearnEnum) {
     let learnCount = 0;
     if (this.LearnedCount) {
@@ -211,10 +240,12 @@ export class defaultSchedule implements PatternSchedule {
     learnCount = Math.min(2, learnCount);
     return learnCount;
   }
+
   private applyLearnResult(opt: LearnEnum) {
     this.LearnedCount = this.getLearnResult(opt);
     this.LearnedTime = window.moment();
   }
+
   private applyReviewResult(opt: ReviewEnum) {
     const nextTime = this.CalcNextTime(opt);
     this.clearLearn();
@@ -222,6 +253,7 @@ export class defaultSchedule implements PatternSchedule {
     this.Opts += opt.toString();
     this.LastTime = window.moment();
   }
+
   CalcNextTime(opt: ReviewEnum): moment.Moment {
     let duration: moment.Duration;
     if (opt == ReviewEnum.EASY) {
@@ -252,17 +284,20 @@ export class defaultSchedule implements PatternSchedule {
     }
     return nextTime;
   }
+
   // clear study results
   private clearLearn() {
     this.LearnedCount = null;
     this.Learned = null;
   }
+
   get IsNew(): boolean {
     if (this.Last == '') {
       return true;
     }
     return false;
   }
+
   get Ease(): number {
     // console.info(`opts is ${this.OptArr}`)
     // hardship deduction
@@ -309,10 +344,13 @@ export class CardSchedule {
       this.schedules.set(k, schedule);
     }
   }
+
   public schedules: Map<string, PatternSchedule>;
+
   constructor() {
     this.schedules = new Map();
   }
+
   getSchedule(id: string) {
     let parten = this.schedules.get(id);
     if (!parten) {
@@ -325,12 +363,15 @@ export class CardSchedule {
 
 abstract class scheduler {
   private _schedule: scheduleCalc;
+
   constructor(schedule: scheduleCalc) {
     this._schedule = schedule;
   }
+
   get schedule(): scheduleCalc {
     return this._schedule;
   }
+
   abstract calculate(): moment.Duration;
 }
 

@@ -1,8 +1,8 @@
 import { addIcon, Plugin } from 'obsidian';
-import { ClozeParser } from 'src/patternCloze';
-import { MultiLineParser, SingleLineParser } from 'src/patternLine';
-import { AOSRSettingTab, GlobalSettings, setGlobalSettings } from 'src/setting';
-import { ParserCollection } from './ParserCollection';
+import { ClozeParser } from 'src/old/patternCloze';
+import { MultiLineParser, SingleLineParser } from 'src/old/patternLine';
+import { AOSRSettingTab, GlobalSettings, setGlobalSettings } from 'src/old/setting';
+import { ParserCollection } from './old/ParserCollection';
 import { ReviewView, VIEW_TYPE_REVIEW } from './view';
 
 export default class AOSRPlugin extends Plugin {
