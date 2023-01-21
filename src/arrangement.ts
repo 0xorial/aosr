@@ -40,21 +40,21 @@ export class Arrangement implements ArrangementBase {
     this.needReviewPattern = [];
   }
   async init() {
-    let search = NewCardSearch();
-    let allcards = await search.search();
+    const search = NewCardSearch();
+    const allcards = await search.search();
     this.allPattern = [];
     this.newPattern = [];
     this.needReviewPattern = [];
     this.watcher = NewCardsWatch(allcards.AllCard);
-    for (let card of allcards.AllCard) {
-      for (let p of card.patterns) {
+    for (const card of allcards.AllCard) {
+      for (const p of card.patterns) {
         this.allPattern.push(p);
       }
     }
     this.sort();
   }
   ArrangementList(): ArrangementItem[] {
-    let retlist: ArrangementItem[] = [];
+    const retlist: ArrangementItem[] = [];
     if (this.newPattern.length > 0) {
       retlist.push(new ArrangementItem('new', this.newPattern.length));
     }
@@ -70,13 +70,13 @@ export class Arrangement implements ArrangementBase {
     return retlist;
   }
   private sort() {
-    let now = window.moment();
+    const now = window.moment();
     this.newPattern = [];
     this.needReviewPattern = [];
     this.needLearn = [];
     this.wait = [];
-    for (let p of this.allPattern) {
-      let learnInfo = p.schedule.LearnInfo;
+    for (const p of this.allPattern) {
+      const learnInfo = p.schedule.LearnInfo;
       if (learnInfo.IsNew) {
         this.newPattern.push(p);
       } else if (p.schedule.NextTime.isBefore(now)) {
@@ -104,11 +104,11 @@ export class Arrangement implements ArrangementBase {
     });
   }
   async findLivePattern(p: Pattern): Promise<Pattern | undefined> {
-    let liveCard = await this.watcher.getLiveCard(p.card.ID);
+    const liveCard = await this.watcher.getLiveCard(p.card.ID);
     if (!liveCard) {
       return;
     }
-    for (let cardp of liveCard.patterns) {
+    for (const cardp of liveCard.patterns) {
       if (p.TagID == cardp.TagID) {
         return cardp;
       }
@@ -118,8 +118,8 @@ export class Arrangement implements ArrangementBase {
   async *PatternSequence(name: string) {
     if (name == 'review') {
       for (let i = 0; i < this.needReviewPattern.length; i++) {
-        let p = this.needReviewPattern[i];
-        let cardp = await this.findLivePattern(p);
+        const p = this.needReviewPattern[i];
+        const cardp = await this.findLivePattern(p);
         if (cardp) {
           yield new PatternIter(cardp, i, this.needReviewPattern.length);
         }
@@ -127,8 +127,8 @@ export class Arrangement implements ArrangementBase {
     }
     if (name == 'new') {
       for (let i = 0; i < this.newPattern.length; i++) {
-        let p = this.newPattern[i];
-        let cardp = await this.findLivePattern(p);
+        const p = this.newPattern[i];
+        const cardp = await this.findLivePattern(p);
         if (cardp) {
           yield new PatternIter(cardp, i, this.newPattern.length);
         }
@@ -136,8 +136,8 @@ export class Arrangement implements ArrangementBase {
     }
     if (name == 'learn') {
       for (let i = 0; i < this.needLearn.length; i++) {
-        let p = this.needLearn[i];
-        let cardp = await this.findLivePattern(p);
+        const p = this.needLearn[i];
+        const cardp = await this.findLivePattern(p);
         if (cardp) {
           yield new PatternIter(cardp, i, this.needLearn.length);
         }

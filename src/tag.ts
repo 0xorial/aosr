@@ -9,9 +9,9 @@ class TagInfo {
       tagstr = tagstr.substring(1);
     }
     if (tagstr.contains('/')) {
-      let idx = tagstr.indexOf('/');
-      let head = tagstr.slice(0, idx);
-      let suffix = tagstr.slice(idx + 1);
+      const idx = tagstr.indexOf('/');
+      const head = tagstr.slice(0, idx);
+      const suffix = tagstr.slice(idx + 1);
       this.Head = head;
       this.Suffix = suffix;
       this.SubTag = new TagInfo(original, suffix);
@@ -27,7 +27,7 @@ class TagsInfo {
     this.Tags = tags;
   }
   findTag(...heads: string[]) {
-    for (let tag of this.Tags) {
+    for (const tag of this.Tags) {
       let flag = true;
       heads.forEach((value: string, index: number) => {
         let subtag = tag;
@@ -47,9 +47,9 @@ class TagsInfo {
 
 export class TagParser {
   static parse(str: string) {
-    let tags: TagInfo[] = [];
-    let results = str.matchAll(/#[\/\w]+/gm);
-    for (let result of results) {
+    const tags: TagInfo[] = [];
+    const results = str.matchAll(/#[/\w]+/gm);
+    for (const result of results) {
       tags.push(new TagInfo(result[0], result[0]));
     }
     return new TagsInfo(tags);

@@ -51,10 +51,10 @@ class updateInfo {
 
 // Implementation of the default card
 class defaultCard implements Card {
-  annotationWrapperStr: string = '';
+  annotationWrapperStr = '';
   bodyList: string[];
   note: TFile;
-  originalID: string = '';
+  originalID = '';
   patterns: Pattern[];
   schedules: CardSchedule;
   indexBuff: number;
@@ -75,17 +75,17 @@ class defaultCard implements Card {
     this.indexBuff = index;
     this.cardText = cardText || '';
     this.bodyList = [];
-    let matchResults = content.matchAll(defaultCard.bodySplitReg);
-    for (let result of matchResults) {
+    const matchResults = content.matchAll(defaultCard.bodySplitReg);
+    for (const result of matchResults) {
       this.bodyList.push(result[0]);
     }
     this.annotationWrapperStr = annotationWrapperStr || '';
     this.note = note;
     this.originalID = cardID || '';
-    let annotationStr = AnnotationWrapper.deWrapper(annotationWrapperStr);
+    const annotationStr = AnnotationWrapper.deWrapper(annotationWrapperStr);
     this.initAnnotation(annotationStr);
 
-    let parser = ParserCollection.getInstance();
+    const parser = ParserCollection.getInstance();
     this.patterns = parser.Parse(this);
   }
   private initAnnotation(annotationStr: string) {
@@ -135,7 +135,7 @@ class defaultCard implements Card {
     } else {
       // If there is no review block ID, update the review block ID first
       if (this.originalID == '') {
-        let index = fileText.indexOf(this.cardText);
+        const index = fileText.indexOf(this.cardText);
         if (index >= 0) {
           fileText = UpdateCardIDTag(this.ID, fileText, index);
         }
@@ -143,7 +143,7 @@ class defaultCard implements Card {
       // Updated review block notes to include review progress
       fileText = this.updateAnnotation(fileText);
       // update review block
-      for (let updateInfo of this.updateList) {
+      for (const updateInfo of this.updateList) {
         fileText = updateInfo.updateFunc(fileText);
       }
       this.updateList = [];

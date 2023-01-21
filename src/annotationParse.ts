@@ -3,10 +3,10 @@ import yaml from 'yaml';
 
 export class AnnotationWrapper {
   static defaultRegAnnotation = String.raw`%%[^\%\^]+?%%\n\^blockID`;
-  static defaultRegWrapper = /%%\n\`\`\`YAML\n([\s\S]+?)\`\`\`\n%%\n\^.+/gm;
+  static defaultRegWrapper = /%%\n```YAML\n([\s\S]+?)```\n%%\n\^.+/gm;
   static findAnnotationWrapper(fileText: string, blockID: string) {
-    let regAnnotation = this.defaultRegAnnotation.replace('blockID', blockID);
-    let matchReg = new RegExp(regAnnotation, 'gm');
+    const regAnnotation = this.defaultRegAnnotation.replace('blockID', blockID);
+    const matchReg = new RegExp(regAnnotation, 'gm');
     let annotation = '';
     fileText.match(matchReg)?.forEach((value) => {
       annotation = value;
@@ -14,8 +14,8 @@ export class AnnotationWrapper {
     return annotation;
   }
   static deWrapper(annotation: string): string {
-    let results = annotation.matchAll(AnnotationWrapper.defaultRegWrapper);
-    for (let result of results) {
+    const results = annotation.matchAll(AnnotationWrapper.defaultRegWrapper);
+    for (const result of results) {
       return result[1];
     }
     return '';
@@ -37,13 +37,13 @@ export class AnnotationObject {
     if (!annotation) {
       return new AnnotationObject();
     }
-    let ret = new AnnotationObject();
-    let obj: AnnotationObject = yaml.parse(annotation);
+    const ret = new AnnotationObject();
+    const obj: AnnotationObject = yaml.parse(annotation);
     ret.copy(obj);
     return ret;
   }
   static Stringify(fmt: AnnotationObject): string {
-    let s = yaml.stringify(fmt, (key, value) => {
+    const s = yaml.stringify(fmt, (key, value) => {
       if (value !== null) return value;
     });
     return s;

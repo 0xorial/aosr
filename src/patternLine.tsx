@@ -63,7 +63,7 @@ class singleLinePattern extends linePattern {
     }
     this.card.updateFile({
       updateFunc: (fileText): string => {
-        let newContent = this.keyText + ' ' + this.TagID;
+        const newContent = this.keyText + ' ' + this.TagID;
         return fileText.replace(this.keyText, newContent);
       },
     });
@@ -77,7 +77,7 @@ class multiLinePattern extends linePattern {
     }
     this.card.updateFile({
       updateFunc: (fileText): string => {
-        let newContent = `${this.front}? ${this.TagID}\n${this.back}`;
+        const newContent = `${this.front}? ${this.TagID}\n${this.back}`;
         return fileText.replace(this.keyText, newContent);
       },
     });
@@ -100,15 +100,15 @@ type singleLinePatternComponentState = {
 class LinePatternComponent extends React.Component<singleLinePatternComponentProps, singleLinePatternComponentState> {
   playTTS = async (text: string) => {
     if (GlobalSettings.WordTTSURL.length > 0) {
-      let url = GlobalSettings.WordTTSURL.replace('%s', text);
+      const url = GlobalSettings.WordTTSURL.replace('%s', text);
       const audio = new Audio(url);
       await audio.play();
     }
   };
   async componentDidMount() {
-    let markdownDivFront = this.state.markdownDivFront;
+    const markdownDivFront = this.state.markdownDivFront;
     markdownDivFront.empty();
-    let markdownDivBack = this.state.markdownDivBack;
+    const markdownDivBack = this.state.markdownDivBack;
     markdownDivBack.empty();
     if (this.props.reverse == false) {
       await renderMarkdown(
@@ -170,19 +170,19 @@ class LinePatternComponent extends React.Component<singleLinePatternComponentPro
 
 export class SingleLineParser implements PatternParser {
   Parse(card: Card): Pattern[] {
-    let reg = /^(.+?)(::+)(.+?)$/gm;
-    let results: Pattern[] = [];
-    for (let body of card.bodyList) {
+    const reg = /^(.+?)(::+)(.+?)$/gm;
+    const results: Pattern[] = [];
+    for (const body of card.bodyList) {
       for (let i = 0; i < 10000; i++) {
-        let regArr = reg.exec(body);
+        const regArr = reg.exec(body);
         if (regArr == null) {
           break;
         }
         if (regArr[2].length == 2) {
-          let newID = `#${CardIDTag}/${card.ID}/s/${cyrb53(regArr[0], 4)}`;
-          let tagInfo = TagParser.parse(regArr[0]);
-          let originalID = tagInfo.findTag(CardIDTag, card.ID, 's')?.Original || '';
-          let result = new singleLinePattern(
+          const newID = `#${CardIDTag}/${card.ID}/s/${cyrb53(regArr[0], 4)}`;
+          const tagInfo = TagParser.parse(regArr[0]);
+          const originalID = tagInfo.findTag(CardIDTag, card.ID, 's')?.Original || '';
+          const result = new singleLinePattern(
             card,
             regArr[0],
             regArr[1],
@@ -194,12 +194,12 @@ export class SingleLineParser implements PatternParser {
           results.push(result);
         }
         if (regArr[2].length == 3) {
-          let newIDForward = `#${CardIDTag}/${card.ID}/sf/${cyrb53(regArr[0], 4)}`;
-          let newIDReverse = `#${CardIDTag}/${card.ID}/sr/${cyrb53(regArr[0], 4)}`;
-          let tagInfo = TagParser.parse(regArr[0]);
-          let originalIDForward = tagInfo.findTag(CardIDTag, card.ID, 'sf')?.Original || '';
-          let originalIDReverse = tagInfo.findTag(CardIDTag, card.ID, 'sr')?.Original || '';
-          let result1 = new singleLinePattern(
+          const newIDForward = `#${CardIDTag}/${card.ID}/sf/${cyrb53(regArr[0], 4)}`;
+          const newIDReverse = `#${CardIDTag}/${card.ID}/sr/${cyrb53(regArr[0], 4)}`;
+          const tagInfo = TagParser.parse(regArr[0]);
+          const originalIDForward = tagInfo.findTag(CardIDTag, card.ID, 'sf')?.Original || '';
+          const originalIDReverse = tagInfo.findTag(CardIDTag, card.ID, 'sr')?.Original || '';
+          const result1 = new singleLinePattern(
             card,
             regArr[0],
             regArr[1],
@@ -208,7 +208,7 @@ export class SingleLineParser implements PatternParser {
             originalIDForward || newIDForward,
             false
           );
-          let result2 = new singleLinePattern(
+          const result2 = new singleLinePattern(
             card,
             regArr[0],
             regArr[1],
@@ -228,18 +228,26 @@ export class SingleLineParser implements PatternParser {
 export class MultiLineParser implements PatternParser {
   Parse(card: Card): Pattern[] {
     // Note that gm is not required
-    let reg = /^((?:(?!\? ?).+\n)+)\?( #.+)?\n((?:.+\n?)+)$/;
+    const reg = /^((?:(?!\? ?).+\n)+)\?( #.+)?\n((?:.+\n?)+)$/;
     // captures continuation lines that do not start with ? then captures tabs then captures remaining lines
-    let results: Pattern[] = [];
-    for (let body of card.bodyList) {
-      let regArr = reg.exec(body);
+    const results: Pattern[] = [];
+    for (const body of card.bodyList) {
+      const regArr = reg.exec(body);
       if (regArr == null) {
         continue;
       }
-      let newID = `#${CardIDTag}/${card.ID}/m/${cyrb53(regArr[0], 4)}`;
-      let tagInfo = TagParser.parse(regArr[2] || '');
-      let originalID = tagInfo.findTag(CardIDTag, card.ID, 'm')?.Original || '';
-      let result = new multiLinePattern(card, regArr[0], regArr[1], regArr[3], originalID, originalID || newID, false);
+      const newID = `#${CardIDTag}/${card.ID}/m/${cyrb53(regArr[0], 4)}`;
+      const tagInfo = TagParser.parse(regArr[2] || '');
+      const originalID = tagInfo.findTag(CardIDTag, card.ID, 'm')?.Original || '';
+      const result = new multiLinePattern(
+        card,
+        regArr[0],
+        regArr[1],
+        regArr[3],
+        originalID,
+        originalID || newID,
+        false
+      );
       results.push(result);
     }
     return results;

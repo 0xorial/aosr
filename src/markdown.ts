@@ -55,10 +55,7 @@ function handleEmbeds(dom: HTMLDivElement, sourcePath: string) {
         return;
       }
       const normalizedPath = getNormalizedPath(src);
-      const target = app.metadataCache.getFirstLinkpathDest(
-        normalizedPath.root,
-        sourcePath
-      );
+      const target = app.metadataCache.getFirstLinkpathDest(normalizedPath.root, sourcePath);
       if (!(target instanceof TFile)) {
         return;
       }
@@ -79,30 +76,26 @@ function handleEmbeds(dom: HTMLDivElement, sourcePath: string) {
 
 function handleImage(el: HTMLElement, file: TFile) {
   el.empty();
-  el.createEl(
-    'img',
-    { attr: { src: app.vault.getResourcePath(file) } },
-    (img) => {
-      if (el.hasAttribute('width')) {
-        let v = el.getAttribute('width');
-        if (v) {
-          img.setAttribute('width', v);
-        }
-      }
-      if (el.hasAttribute('height')) {
-        let v = el.getAttribute('height');
-        if (v) {
-          img.setAttribute('height', v);
-        }
-      }
-      if (el.hasAttribute('alt')) {
-        let v = el.getAttribute('alt');
-        if (v) {
-          img.setAttribute('alt', v);
-        }
+  el.createEl('img', { attr: { src: app.vault.getResourcePath(file) } }, (img) => {
+    if (el.hasAttribute('width')) {
+      const v = el.getAttribute('width');
+      if (v) {
+        img.setAttribute('width', v);
       }
     }
-  );
+    if (el.hasAttribute('height')) {
+      const v = el.getAttribute('height');
+      if (v) {
+        img.setAttribute('height', v);
+      }
+    }
+    if (el.hasAttribute('alt')) {
+      const v = el.getAttribute('alt');
+      if (v) {
+        img.setAttribute('alt', v);
+      }
+    }
+  });
   el.addClasses(['image-embed', 'is-loaded']);
 }
 
@@ -116,19 +109,15 @@ function handleAudio(el: HTMLElement, file: TFile) {
 
 function handleVideo(el: HTMLElement, file: TFile) {
   el.empty();
-  el.createEl(
-    'video',
-    { attr: { controls: '', src: app.vault.getResourcePath(file) } },
-    (video) => {
-      const handleLoad = () => {
-        video.removeEventListener('loadedmetadata', handleLoad);
-        if (video.videoWidth === 0 && video.videoHeight === 0) {
-          el.empty();
-          handleAudio(el, file);
-        }
-      };
-      video.addEventListener('loadedmetadata', handleLoad);
-    }
-  );
+  el.createEl('video', { attr: { controls: '', src: app.vault.getResourcePath(file) } }, (video) => {
+    const handleLoad = () => {
+      video.removeEventListener('loadedmetadata', handleLoad);
+      if (video.videoWidth === 0 && video.videoHeight === 0) {
+        el.empty();
+        handleAudio(el, file);
+      }
+    };
+    video.addEventListener('loadedmetadata', handleLoad);
+  });
   el.addClasses(['media-embed', 'is-loaded']);
 }

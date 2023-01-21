@@ -12,9 +12,9 @@ export class ParserCollection implements PatternParser {
     if (this.parsers.length == 0) {
       throw new Error('No parsers implemented.');
     }
-    let tmpResults: Pattern[] = [];
-    for (let parser of this.parsers) {
-      let results = parser.Parse(card);
+    const tmpResults: Pattern[] = [];
+    for (const parser of this.parsers) {
+      const results = parser.Parse(card);
       tmpResults.push(...results);
     }
     return tmpResults;

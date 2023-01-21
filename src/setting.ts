@@ -18,7 +18,7 @@ const AOSR_DEFAULT_SETTINGS: AOSRSettings = {
 export let GlobalSettings: AOSRSettings;
 
 export function setGlobalSettings(s: AOSRSettings) {
-  let settings = Object.assign({}, AOSR_DEFAULT_SETTINGS, s);
+  const settings = Object.assign({}, AOSR_DEFAULT_SETTINGS, s);
   GlobalSettings = settings;
 }
 

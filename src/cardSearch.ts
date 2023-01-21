@@ -30,7 +30,7 @@ class defaultCardSearch implements cardSearcher {
   private defaultRegText = String.raw`(^#tagName\b.*)\n((?:^.+$\n?)+)`;
   private matchReg: RegExp;
   async search(file?: TFile): Promise<SearchResult> {
-    let result = new SearchResult();
+    const result = new SearchResult();
     result.SearchName = '#' + this.tagName;
     if (file) {
       await this.walkFileCard(file, (card) => {
@@ -52,23 +52,23 @@ class defaultCardSearch implements cardSearcher {
     }
   }
   async walkFileCard(note: TFile, callback: (card: Card) => void) {
-    let fileText: string = await app.vault.read(note);
+    const fileText: string = await app.vault.read(note);
     // workaround If there is no extra newline after the last card of the text, the regular expression cannot match
     // fileText += "\n"
-    let results = fileText.matchAll(this.matchReg);
-    for (let result of results) {
+    const results = fileText.matchAll(this.matchReg);
+    for (const result of results) {
       // match comment segment
-      let cardText = result[0];
-      let index = result.index || 0;
-      let tags = TagParser.parse(result[1]);
-      let idTag = tags.findTag(CardIDTag);
-      let blockID = idTag?.Suffix || '';
+      const cardText = result[0];
+      const index = result.index || 0;
+      const tags = TagParser.parse(result[1]);
+      const idTag = tags.findTag(CardIDTag);
+      const blockID = idTag?.Suffix || '';
       let annotation = '';
       if (blockID != '') {
         annotation = AnnotationWrapper.findAnnotationWrapper(fileText, blockID);
       }
-      let content = result[2];
-      let card: Card = NewCard(cardText, content, annotation, blockID, index, note);
+      const content = result[2];
+      const card: Card = NewCard(cardText, content, annotation, blockID, index, note);
       callback(card);
     }
   }

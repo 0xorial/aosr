@@ -28,8 +28,8 @@ export abstract class Pattern {
 }
 
 export function prettyText(text: string): string {
-  let tags = TagParser.parse(text);
-  for (let tag of tags.Tags) {
+  const tags = TagParser.parse(text);
+  for (const tag of tags.Tags) {
     if (tag.Head != CardIDTag) {
       continue;
     }

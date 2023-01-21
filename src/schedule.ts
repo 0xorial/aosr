@@ -131,8 +131,8 @@ export class defaultSchedule implements PatternSchedule {
     this.Next = t.format('YYYY-MM-DD HH:mm');
   }
   get OptArr(): ReviewEnum[] {
-    let ret: ReviewEnum[] = [];
-    for (let c of this.Opts) {
+    const ret: ReviewEnum[] = [];
+    for (const c of this.Opts) {
       ret.push(Number(c));
     }
     return ret;
@@ -141,8 +141,8 @@ export class defaultSchedule implements PatternSchedule {
     if (!this.Last) {
       return window.moment.duration(12, 'hours');
     }
-    let now = window.moment();
-    let gap = window.moment.duration(now.diff(this.LastTime, 'seconds'), 'seconds');
+    const now = window.moment();
+    const gap = window.moment.duration(now.diff(this.LastTime, 'seconds'), 'seconds');
     return gap;
   }
   get ID(): string {
@@ -163,11 +163,11 @@ export class defaultSchedule implements PatternSchedule {
     this.Next = '';
   }
   CalcLearnRate(opt: LearnEnum): number {
-    let learnCount = this.getLearnResult(opt);
+    const learnCount = this.getLearnResult(opt);
     return (learnCount + 2) / 4;
   }
   get LearnInfo(): LearnInfo {
-    let info = new LearnInfo();
+    const info = new LearnInfo();
     info.IsNew = this.IsNew;
     info.IsLearn = false;
     info.IsWait = false;
@@ -181,7 +181,7 @@ export class defaultSchedule implements PatternSchedule {
     } else {
       // Information in medium-term memory does not need to be learned
       // This part will be rescheduled after the medium-term memory is emptied from the memory area
-      let checkPoint = window.moment().add(-3, 'hours');
+      const checkPoint = window.moment().add(-3, 'hours');
       if (this.LearnedTime.isAfter(checkPoint)) {
         info.IsWait = true;
       } else {
@@ -216,7 +216,7 @@ export class defaultSchedule implements PatternSchedule {
     this.LearnedTime = window.moment();
   }
   private applyReviewResult(opt: ReviewEnum) {
-    let nextTime = this.CalcNextTime(opt);
+    const nextTime = this.CalcNextTime(opt);
     this.clearLearn();
     this.NextTime = nextTime;
     this.Opts += opt.toString();
@@ -267,7 +267,7 @@ export class defaultSchedule implements PatternSchedule {
     // console.info(`opts is ${this.OptArr}`)
     // hardship deduction
     let hardBonus = 0;
-    for (let opt of this.OptArr.slice(-20)) {
+    for (const opt of this.OptArr.slice(-20)) {
       if (opt == ReviewEnum.FORGET) {
         hardBonus += 50;
       }
@@ -277,14 +277,14 @@ export class defaultSchedule implements PatternSchedule {
     }
     // simple reward
     let easeBouns = 0;
-    for (let opt of this.OptArr.slice(-20)) {
+    for (const opt of this.OptArr.slice(-20)) {
       if (opt == ReviewEnum.EASY) {
         easeBouns += 25;
       }
     }
     // Too easy
     let easeCount = 0;
-    for (let opt of this.OptArr.slice(-2)) {
+    for (const opt of this.OptArr.slice(-2)) {
       if (opt == ReviewEnum.EASY) {
         easeCount++;
       }
@@ -303,8 +303,8 @@ export class defaultSchedule implements PatternSchedule {
 export class CardSchedule {
   copy(cardSchedule: CardSchedule) {
     const map1 = new Map(Object.entries(cardSchedule.schedules));
-    for (let [k, v] of map1) {
-      let schedule = NewSchedule(k);
+    for (const [k, v] of map1) {
+      const schedule = NewSchedule(k);
       schedule.copy(v);
       this.schedules.set(k, schedule);
     }
@@ -337,9 +337,9 @@ abstract class scheduler {
 // Simple Difficulty Calculations
 class easeSchedule extends scheduler {
   calculate(): moment.Duration {
-    let basesecond = (this.schedule.Gap.asSeconds() * this.schedule.Ease) / 100;
-    let addsecond = Number(GlobalSettings.EasyBonus) * 24 * 60 * 60;
-    let newdiff = window.moment.duration(basesecond + addsecond, 'seconds');
+    const basesecond = (this.schedule.Gap.asSeconds() * this.schedule.Ease) / 100;
+    const addsecond = Number(GlobalSettings.EasyBonus) * 24 * 60 * 60;
+    const newdiff = window.moment.duration(basesecond + addsecond, 'seconds');
     return newdiff;
   }
 }
@@ -347,8 +347,8 @@ class easeSchedule extends scheduler {
 // normal difficulty calculation
 class fairSchedule extends scheduler {
   calculate(): moment.Duration {
-    let basesecond = (this.schedule.Gap.asSeconds() * this.schedule.Ease) / 100;
-    let newdiff = window.moment.duration(basesecond, 'seconds');
+    const basesecond = (this.schedule.Gap.asSeconds() * this.schedule.Ease) / 100;
+    const newdiff = window.moment.duration(basesecond, 'seconds');
     return newdiff;
   }
 }
@@ -356,8 +356,8 @@ class fairSchedule extends scheduler {
 // Difficulty calculation
 class hardSchedule extends scheduler {
   calculate(): moment.Duration {
-    let basesecond = (this.schedule.Gap.asSeconds() * 100) / this.schedule.Ease;
-    let newdiff = window.moment.duration(basesecond, 'seconds');
+    const basesecond = (this.schedule.Gap.asSeconds() * 100) / this.schedule.Ease;
+    const newdiff = window.moment.duration(basesecond, 'seconds');
     return newdiff;
   }
 }
@@ -365,10 +365,10 @@ class hardSchedule extends scheduler {
 // no difficulty calculation
 class unknowSchedule extends scheduler {
   calculate(): moment.Duration {
-    let basesecond = (this.schedule.Gap.asSeconds() * 100) / this.schedule.Ease;
-    let addsecond = Number(GlobalSettings.HardBonus) * 24 * 60 * 60;
-    let diffsecond = basesecond - addsecond;
-    let newdiff = window.moment.duration(diffsecond, 'seconds');
+    const basesecond = (this.schedule.Gap.asSeconds() * 100) / this.schedule.Ease;
+    const addsecond = Number(GlobalSettings.HardBonus) * 24 * 60 * 60;
+    const diffsecond = basesecond - addsecond;
+    const newdiff = window.moment.duration(diffsecond, 'seconds');
     return newdiff;
   }
 }

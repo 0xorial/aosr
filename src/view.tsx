@@ -1,4 +1,3 @@
-/* eslint-disable prefer-const */
 import { Box, Chip, List, ListItem, ListItemButton, ListItemText, Paper, Stack } from '@mui/material';
 import Button from '@mui/material/Button';
 import { Arrangement } from 'src/arrangement';
@@ -59,8 +58,8 @@ function ReviewingHeader({
       return;
     }
     // The position of the Tag is used first, and if the tag does not exist, the position of the card cache is used
-    let noteText = await app.vault.read(pattern.card.note);
-    let index = noteText.indexOf(pattern.TagID);
+    const noteText = await app.vault.read(pattern.card.note);
+    const index = noteText.indexOf(pattern.TagID);
     let offset = 0;
     let length = 0;
     if (index >= 0) {
@@ -70,9 +69,9 @@ function ReviewingHeader({
       offset = pattern.card.indexBuff;
       length = pattern.card.cardText.length;
     }
-    let range1 = view.editor.offsetToPos(offset);
-    let range2 = view.editor.offsetToPos(offset + length);
-    let range2next: EditorPosition = {
+    const range1 = view.editor.offsetToPos(offset);
+    const range2 = view.editor.offsetToPos(offset + length);
+    const range2next: EditorPosition = {
       line: range2.line + 1,
       ch: 0,
     };
@@ -91,7 +90,7 @@ function ReviewingHeader({
     if (nowPattern?.schedule?.LearnInfo.IsNew) {
       return '';
     }
-    let date = nowPattern?.schedule.LastTime;
+    const date = nowPattern?.schedule.LastTime;
     return date?.fromNow() || '';
   };
 
@@ -132,7 +131,7 @@ function ReviewCard({ p, view, submit }: { p: Pattern; view: ItemView; submit: (
   const [showAnswer, setShowAnswer] = React.useState(false);
 
   const getOptDate = (opt: ReviewEnum): string => {
-    let date = p?.schedule.CalcNextTime(opt);
+    const date = p?.schedule.CalcNextTime(opt);
     return date?.fromNow() || '';
   };
 
@@ -167,7 +166,7 @@ function Reviewing2({ arrangeName, arrangement, goStage, view }: ReviewingProps)
 
   useAsyncCallback(
     async ({ wrap }) => {
-      let result = await wrap(patternIter.next());
+      const result = await wrap(patternIter.next());
       if (result.done) {
         goStage(ReviewStage.Loading);
         return;
@@ -181,7 +180,7 @@ function Reviewing2({ arrangeName, arrangement, goStage, view }: ReviewingProps)
   );
 
   const next = async () => {
-    let result = await patternIter.next();
+    const result = await patternIter.next();
     if (result.done) {
       goStage(ReviewStage.Loading);
       return;
@@ -282,7 +281,7 @@ class ReviewComponent extends React.Component<ReviewProps, ReviewState> {
       return;
     }
     this.syncFlag = true;
-    let arrangement = this.state.arrangement;
+    const arrangement = this.state.arrangement;
     await arrangement.init();
     this.setState({
       arrangement: arrangement,
@@ -374,7 +373,7 @@ export class ReviewView extends ItemView {
   }
 
   async onload() {
-    let rootDiv = this.containerEl.children[1].createDiv();
+    const rootDiv = this.containerEl.children[1].createDiv();
     this.root = createRoot(rootDiv);
     this.root.render(<App view={this}></App>);
   }

@@ -26,8 +26,8 @@ class defaultCardsWatcher implements CardsWatcher {
     return card;
   }
   findCardByID(id: string) {
-    for (let [file, cards] of this.cardMapByNote) {
-      let card = cards.get(id);
+    for (const [file, cards] of this.cardMapByNote) {
+      const card = cards.get(id);
       if (card) {
         return card;
       }
@@ -39,8 +39,8 @@ class defaultCardsWatcher implements CardsWatcher {
     this.addCards(cards);
   }
   private addCards(cards: Card[]): void {
-    for (let card of cards) {
-      let cardsMap = this.cardMapByNote.get(card.note.path);
+    for (const card of cards) {
+      const cardsMap = this.cardMapByNote.get(card.note.path);
       if (!cardsMap) {
         this.cardMapByNote.set(card.note.path, new Map());
       }
@@ -49,11 +49,11 @@ class defaultCardsWatcher implements CardsWatcher {
   }
   // Update a card for a file
   private async researchFile(file: TFile): Promise<number> {
-    let cardsMap = this.cardMapByNote.get(file.path);
+    const cardsMap = this.cardMapByNote.get(file.path);
     if (cardsMap) {
       cardsMap.clear();
-      let search = NewCardSearch();
-      let result = await search.search(file);
+      const search = NewCardSearch();
+      const result = await search.search(file);
       this.addCards(result.AllCard);
       return result.AllCard.length;
     }
