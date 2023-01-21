@@ -1,7 +1,7 @@
-import { addIcon, Plugin, WorkspaceLeaf } from 'obsidian';
-import { ClozeParser } from 'patternCloze';
-import { MultiLineParser, SingleLineParser } from 'patternLine';
-import { AOSRSettingTab, setGlobalSettings, GlobalSettings } from 'setting';
+import { addIcon, Plugin } from 'obsidian';
+import { ClozeParser } from 'src/patternCloze';
+import { MultiLineParser, SingleLineParser } from 'src/patternLine';
+import { AOSRSettingTab, GlobalSettings, setGlobalSettings } from 'src/setting';
 import { ParserCollection } from './ParserCollection';
 import { ReviewView, VIEW_TYPE_REVIEW } from './view';
 

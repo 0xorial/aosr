@@ -1,13 +1,13 @@
-import { Card } from 'card';
-import { CardIDTag } from 'cardHead';
-import { cyrb53 } from 'hash';
-import { renderMarkdown } from 'markdown';
-import { NodeContainer } from 'nodeContainer';
-import { PatternParser } from 'ParserCollection';
-import { Pattern, PatternProps, prettyText } from 'Pattern';
+import { Card } from 'src/card';
+import { CardIDTag } from 'src/cardHead';
+import { cyrb53 } from 'src/hash';
+import { renderMarkdown } from 'src/markdown';
+import { NodeContainer } from 'src/nodeContainer';
+import { PatternParser } from 'src/ParserCollection';
+import { Pattern, PatternProps, prettyText } from 'src/Pattern';
 import React from 'react';
-import { Operation } from 'schedule';
-import { TagParser } from 'tag';
+import { Operation } from 'src/schedule';
+import { TagParser } from 'src/tag';
 
 const hasClozeReg = /==(\S[\s\S]*?)==/m;
 const clozeReg = /==(\S[\s\S]*?)==/gm;
@@ -19,10 +19,7 @@ class multiclozePattern extends Pattern {
     }
     this.card.updateFile({
       updateFunc: (filetext): string => {
-        let newtext = this.text.replace(
-          '#multicloze',
-          `#multicloze ${this.TagID} `
-        );
+        let newtext = this.text.replace('#multicloze', `#multicloze ${this.TagID} `);
         return filetext.replace(this.text, newtext);
       },
     });
@@ -86,14 +83,7 @@ class clozePattern extends Pattern {
       ></ClozePatternComponent>
     );
   };
-  constructor(
-    card: Card,
-    text: string,
-    clozeOriginal: string,
-    clozeInner: string,
-    originalID: string,
-    tagid: string
-  ) {
+  constructor(card: Card, text: string, clozeOriginal: string, clozeInner: string, originalID: string, tagid: string) {
     super(card, tagid);
     this.text = text;
     this.clozeInner = clozeInner;
@@ -116,10 +106,7 @@ type clozePatternComponentState = {
   markdownDivUnmask: HTMLDivElement;
 };
 
-class ClozePatternComponent extends React.Component<
-  clozePatternComponentProps,
-  clozePatternComponentState
-> {
+class ClozePatternComponent extends React.Component<clozePatternComponentProps, clozePatternComponentState> {
   private loadFlag: boolean;
   async componentDidMount() {
     if (this.loadFlag) {
@@ -135,10 +122,7 @@ class ClozePatternComponent extends React.Component<
         clozeReg,
         `<span style="border-bottom: 2px solid #dbdbdb;"><mark class="fuzzy">$1</mark></span>`
       );
-      unmasktext = this.props.text.replace(
-        clozeReg,
-        `<span style="border-bottom: 2px solid #dbdbdb;">$1</span>`
-      );
+      unmasktext = this.props.text.replace(clozeReg, `<span style="border-bottom: 2px solid #dbdbdb;">$1</span>`);
     } else {
       masktext = this.props.text.replace(
         this.props.clozeOriginal,
@@ -151,18 +135,8 @@ class ClozePatternComponent extends React.Component<
     }
     masktext = prettyText(masktext);
     unmasktext = prettyText(unmasktext);
-    await renderMarkdown(
-      masktext,
-      this.state.markdownDivMask,
-      this.props.path,
-      this.props.patternProps.view
-    );
-    await renderMarkdown(
-      unmasktext,
-      this.state.markdownDivUnmask,
-      this.props.path,
-      this.props.patternProps.view
-    );
+    await renderMarkdown(masktext, this.state.markdownDivMask, this.props.path, this.props.patternProps.view);
+    await renderMarkdown(unmasktext, this.state.markdownDivUnmask, this.props.path, this.props.patternProps.view);
     this.setState({
       markdownDivMask: this.state.markdownDivMask,
       markdownDivUnmask: this.state.markdownDivUnmask,
@@ -184,9 +158,7 @@ class ClozePatternComponent extends React.Component<
             <NodeContainer node={this.state.markdownDivMask}></NodeContainer>
           </div>
         )}
-        {this.props.patternProps.showAns && (
-          <NodeContainer node={this.state.markdownDivUnmask}></NodeContainer>
-        )}
+        {this.props.patternProps.showAns && <NodeContainer node={this.state.markdownDivUnmask}></NodeContainer>}
       </div>
     );
   }
@@ -203,14 +175,8 @@ export class ClozeParser implements PatternParser {
         let has = hasClozeReg.test(body);
         if (has) {
           let newID = `#${CardIDTag}/${card.ID}/mc/${cyrb53(body, 4)}`;
-          let originalID =
-            bodytag.findTag(CardIDTag, card.ID, 'mc')?.Original || '';
-          let result = new multiclozePattern(
-            card,
-            body,
-            originalID,
-            originalID || newID
-          );
+          let originalID = bodytag.findTag(CardIDTag, card.ID, 'mc')?.Original || '';
+          let result = new multiclozePattern(card, body, originalID, originalID || newID);
           results.push(result);
         } else {
           console.log(`missing multicloze tag. ${body} ${bodytag}`);
@@ -224,16 +190,8 @@ export class ClozeParser implements PatternParser {
           }
           let newID = `#${CardIDTag}/${card.ID}/c/${cyrb53(regArr[0], 4)}`;
           let tagInfo = TagParser.parse(regArr[2] || '');
-          let originalID =
-            tagInfo.findTag(CardIDTag, card.ID, 'c')?.Original || '';
-          let result = new clozePattern(
-            card,
-            body,
-            regArr[0],
-            regArr[1],
-            originalID,
-            originalID || newID
-          );
+          let originalID = tagInfo.findTag(CardIDTag, card.ID, 'c')?.Original || '';
+          let result = new clozePattern(card, body, regArr[0], regArr[1], originalID, originalID || newID);
           results.push(result);
         }
       }

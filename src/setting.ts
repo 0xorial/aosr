@@ -1,4 +1,4 @@
-import AOSRPlugin from 'main';
+import AOSRPlugin from 'src/main';
 import { App, PluginSettingTab, Setting } from 'obsidian';
 
 export interface AOSRSettings {
@@ -82,9 +82,7 @@ export class AOSRSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Word TTS')
-      .setDesc(
-        'Input a TTS URL to pronounce the single word in the card. Use %s to represent word.'
-      )
+      .setDesc('Input a TTS URL to pronounce the single word in the card. Use %s to represent word.')
       .addText((text) =>
         text
           .setPlaceholder('http://word.tts/%s')

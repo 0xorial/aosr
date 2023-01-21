@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import { useIsMounted } from '../controls/useIsMounted';
+import { useIsMounted } from './useIsMounted';
 
 // wraps an async function into a version which can be called without
 // a risk of running the code after component is unmounted

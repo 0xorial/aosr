@@ -1,4 +1,4 @@
-import { GlobalSettings } from 'setting';
+import { GlobalSettings } from 'src/setting';
 
 export enum ReviewEnum {
   // Won't
@@ -82,10 +82,7 @@ export interface PatternYaml {
   copy(v: PatternYaml): void;
 }
 
-export interface PatternSchedule
-  extends scheduleCalc,
-    scheduleArrange,
-    PatternYaml {}
+export interface PatternSchedule extends scheduleCalc, scheduleArrange, PatternYaml {}
 
 export function NewSchedule(id: string) {
   return new defaultSchedule(id);
@@ -145,10 +142,7 @@ export class defaultSchedule implements PatternSchedule {
       return window.moment.duration(12, 'hours');
     }
     let now = window.moment();
-    let gap = window.moment.duration(
-      now.diff(this.LastTime, 'seconds'),
-      'seconds'
-    );
+    let gap = window.moment.duration(now.diff(this.LastTime, 'seconds'), 'seconds');
     return gap;
   }
   get ID(): string {

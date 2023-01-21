@@ -1,6 +1,6 @@
-import { NewCardSearch } from 'cardSearch';
-import { CardsWatcher, NewCardsWatch } from 'cardWatcher';
-import { Pattern } from 'Pattern';
+import { NewCardSearch } from 'src/cardSearch';
+import { CardsWatcher, NewCardsWatch } from 'src/cardWatcher';
+import { Pattern } from 'src/Pattern';
 
 class ArrangementItem {
   Name: string;
@@ -23,9 +23,7 @@ export class PatternIter {
 }
 
 abstract class ArrangementBase {
-  abstract PatternSequence(
-    Name: string
-  ): AsyncGenerator<PatternIter, boolean, unknown>;
+  abstract PatternSequence(Name: string): AsyncGenerator<PatternIter, boolean, unknown>;
   abstract ArrangementList(): ArrangementItem[];
 }
 
@@ -61,9 +59,7 @@ export class Arrangement implements ArrangementBase {
       retlist.push(new ArrangementItem('new', this.newPattern.length));
     }
     if (this.needReviewPattern.length > 0) {
-      retlist.push(
-        new ArrangementItem('review', this.needReviewPattern.length)
-      );
+      retlist.push(new ArrangementItem('review', this.needReviewPattern.length));
     }
     if (this.needLearn.length > 0) {
       retlist.push(new ArrangementItem('learn', this.needLearn.length));

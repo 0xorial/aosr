@@ -1,7 +1,7 @@
-import { AnnotationWrapper } from 'annotationParse';
-import { CardIDTag } from 'cardHead';
+import { AnnotationWrapper } from 'src/annotationParse';
+import { CardIDTag } from 'src/cardHead';
 import { TFile } from 'obsidian';
-import { TagParser } from 'tag';
+import { TagParser } from 'src/tag';
 import { Card, NewCard } from './card';
 
 // search results
@@ -68,14 +68,7 @@ class defaultCardSearch implements cardSearcher {
         annotation = AnnotationWrapper.findAnnotationWrapper(fileText, blockID);
       }
       let content = result[2];
-      let card: Card = NewCard(
-        cardText,
-        content,
-        annotation,
-        blockID,
-        index,
-        note
-      );
+      let card: Card = NewCard(cardText, content, annotation, blockID, index, note);
       callback(card);
     }
   }

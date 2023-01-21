@@ -1,21 +1,12 @@
 /* eslint-disable prefer-const */
-import {
-  Box,
-  Chip,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Paper,
-  Stack,
-} from '@mui/material';
+import { Box, Chip, List, ListItem, ListItemButton, ListItemText, Paper, Stack } from '@mui/material';
 import Button from '@mui/material/Button';
-import { Arrangement } from 'arrangement';
+import { Arrangement } from 'src/arrangement';
 import { EditorPosition, ItemView, MarkdownView } from 'obsidian';
-import { Pattern } from 'Pattern';
+import { Pattern } from 'src/Pattern';
 import * as React from 'react';
 import { createRoot, Root } from 'react-dom/client';
-import { Operation, ReviewEnum, ReviewOpt } from 'schedule';
+import { Operation, ReviewEnum, ReviewOpt } from 'src/schedule';
 import LinearProgress from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
 import { useAsyncCallback } from './hooks/useAsyncCallback';
@@ -28,10 +19,7 @@ function LinearProgressWithLabel(props: { value1: number; value2: number }) {
         <LinearProgress variant="determinate" value={value} />
       </Box>
       <Box sx={{ minWidth: 50 }}>
-        <Typography
-          variant="body2"
-          color="var(--text-normal)"
-        >{`${props.value1}/${props.value2}`}</Typography>
+        <Typography variant="body2" color="var(--text-normal)">{`${props.value1}/${props.value2}`}</Typography>
       </Box>
     </Box>
   );
@@ -140,15 +128,7 @@ function ReviewingHeader({
   );
 }
 
-function ReviewCard({
-  p,
-  view,
-  submit,
-}: {
-  p: Pattern;
-  view: ItemView;
-  submit: (r: ReviewOpt) => void;
-}) {
+function ReviewCard({ p, view, submit }: { p: Pattern; view: ItemView; submit: (r: ReviewOpt) => void }) {
   const [showAnswer, setShowAnswer] = React.useState(false);
 
   const getOptDate = (opt: ReviewEnum): string => {
@@ -159,30 +139,16 @@ function ReviewCard({
   return (
     <>
       <p.Component view={view} showAns={showAnswer}></p.Component>
-      {!showAnswer && (
-        <Button onClick={() => setShowAnswer(true)}>Show answer</Button>
-      )}
+      {!showAnswer && <Button onClick={() => setShowAnswer(true)}>Show answer</Button>}
       {showAnswer && (
         <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
-          <Button
-            color="error"
-            size="large"
-            onClick={() => submit(new ReviewOpt(ReviewEnum.FORGET))}
-          >
+          <Button color="error" size="large" onClick={() => submit(new ReviewOpt(ReviewEnum.FORGET))}>
             Did not remember
           </Button>
-          <Button
-            onClick={() => submit(new ReviewOpt(ReviewEnum.HARD))}
-            color="warning"
-            size="large"
-          >
+          <Button onClick={() => submit(new ReviewOpt(ReviewEnum.HARD))} color="warning" size="large">
             Hard {getOptDate(ReviewEnum.HARD)}
           </Button>
-          <Button
-            onClick={() => submit(new ReviewOpt(ReviewEnum.EASY))}
-            color="success"
-            size="large"
-          >
+          <Button onClick={() => submit(new ReviewOpt(ReviewEnum.EASY))} color="success" size="large">
             Easy {getOptDate(ReviewEnum.HARD)}
           </Button>
         </Stack>
@@ -191,21 +157,13 @@ function ReviewCard({
   );
 }
 
-function Reviewing2({
-  arrangeName,
-  arrangement,
-  goStage,
-  view,
-}: ReviewingProps) {
+function Reviewing2({ arrangeName, arrangement, goStage, view }: ReviewingProps) {
   const [index, setIndex] = React.useState(0);
   const [total, setTotal] = React.useState(1);
   const [nowPattern, setNowPattern] = React.useState<Pattern>();
   const [lastPattern, setLastPattern] = React.useState<Pattern>();
 
-  const patternIter = React.useMemo(
-    () => arrangement.PatternSequence(arrangeName),
-    [arrangeName, arrangement]
-  );
+  const patternIter = React.useMemo(() => arrangement.PatternSequence(arrangeName), [arrangeName, arrangement]);
 
   useAsyncCallback(
     async ({ wrap }) => {
@@ -241,12 +199,7 @@ function Reviewing2({
 
   return (
     <Box>
-      <ReviewingHeader
-        index={index}
-        total={total}
-        nowPattern={nowPattern}
-        lastPattern={lastPattern}
-      />
+      <ReviewingHeader index={index} total={total} nowPattern={nowPattern} lastPattern={lastPattern} />
       {nowPattern && (
         <Box sx={{ minHeight: 135 }}>
           <ReviewCard p={nowPattern} submit={submit} view={view} />
@@ -268,10 +221,7 @@ type MaindeskProps = {
   setArrangement: (arrangeName: string) => void;
 };
 
-class MaindeskComponent extends React.Component<
-  MaindeskProps,
-  Record<string, never>
-> {
+class MaindeskComponent extends React.Component<MaindeskProps, Record<string, never>> {
   constructor(props: any) {
     super(props);
   }
@@ -301,9 +251,7 @@ class MaindeskComponent extends React.Component<
               ))}
             </List>
           )}
-          {this.props.arrangement.ArrangementList().length == 0 && (
-            <p>All Done.</p>
-          )}
+          {this.props.arrangement.ArrangementList().length == 0 && <p>All Done.</p>}
         </Paper>
       </Box>
     );

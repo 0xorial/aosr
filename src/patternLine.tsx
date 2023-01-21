@@ -1,12 +1,12 @@
-import { Card } from 'card';
-import { CardIDTag } from 'cardHead';
-import { cyrb53 } from 'hash';
-import { PatternParser } from 'ParserCollection';
-import { Pattern, PatternProps, prettyText } from 'Pattern';
+import { Card } from 'src/card';
+import { CardIDTag } from 'src/cardHead';
+import { cyrb53 } from 'src/hash';
+import { PatternParser } from 'src/ParserCollection';
+import { Pattern, PatternProps, prettyText } from 'src/Pattern';
 import React from 'react';
-import { Operation } from 'schedule';
-import { GlobalSettings } from 'setting';
-import { TagParser } from 'tag';
+import { Operation } from 'src/schedule';
+import { GlobalSettings } from 'src/setting';
+import { TagParser } from 'src/tag';
 import { renderMarkdown } from './markdown';
 import { NodeContainer } from './nodeContainer';
 
@@ -97,10 +97,7 @@ type singleLinePatternComponentState = {
   markdownDivBack: HTMLDivElement;
 };
 
-class LinePatternComponent extends React.Component<
-  singleLinePatternComponentProps,
-  singleLinePatternComponentState
-> {
+class LinePatternComponent extends React.Component<singleLinePatternComponentProps, singleLinePatternComponentState> {
   playTTS = async (text: string) => {
     if (GlobalSettings.WordTTSURL.length > 0) {
       let url = GlobalSettings.WordTTSURL.replace('%s', text);
@@ -120,12 +117,7 @@ class LinePatternComponent extends React.Component<
         this.props.path,
         this.props.patternProps.view
       );
-      await renderMarkdown(
-        prettyText(this.props.back),
-        markdownDivBack,
-        this.props.path,
-        this.props.patternProps.view
-      );
+      await renderMarkdown(prettyText(this.props.back), markdownDivBack, this.props.path, this.props.patternProps.view);
     } else {
       await renderMarkdown(
         prettyText(this.props.back),
@@ -169,9 +161,7 @@ class LinePatternComponent extends React.Component<
       <div>
         <NodeContainer node={this.state.markdownDivFront}></NodeContainer>
         <br></br>
-        {this.props.patternProps.showAns && (
-          <NodeContainer node={this.state.markdownDivBack}></NodeContainer>
-        )}
+        {this.props.patternProps.showAns && <NodeContainer node={this.state.markdownDivBack}></NodeContainer>}
         <br></br>
       </div>
     );
@@ -191,8 +181,7 @@ export class SingleLineParser implements PatternParser {
         if (regArr[2].length == 2) {
           let newID = `#${CardIDTag}/${card.ID}/s/${cyrb53(regArr[0], 4)}`;
           let tagInfo = TagParser.parse(regArr[0]);
-          let originalID =
-            tagInfo.findTag(CardIDTag, card.ID, 's')?.Original || '';
+          let originalID = tagInfo.findTag(CardIDTag, card.ID, 's')?.Original || '';
           let result = new singleLinePattern(
             card,
             regArr[0],
@@ -205,19 +194,11 @@ export class SingleLineParser implements PatternParser {
           results.push(result);
         }
         if (regArr[2].length == 3) {
-          let newIDForward = `#${CardIDTag}/${card.ID}/sf/${cyrb53(
-            regArr[0],
-            4
-          )}`;
-          let newIDReverse = `#${CardIDTag}/${card.ID}/sr/${cyrb53(
-            regArr[0],
-            4
-          )}`;
+          let newIDForward = `#${CardIDTag}/${card.ID}/sf/${cyrb53(regArr[0], 4)}`;
+          let newIDReverse = `#${CardIDTag}/${card.ID}/sr/${cyrb53(regArr[0], 4)}`;
           let tagInfo = TagParser.parse(regArr[0]);
-          let originalIDForward =
-            tagInfo.findTag(CardIDTag, card.ID, 'sf')?.Original || '';
-          let originalIDReverse =
-            tagInfo.findTag(CardIDTag, card.ID, 'sr')?.Original || '';
+          let originalIDForward = tagInfo.findTag(CardIDTag, card.ID, 'sf')?.Original || '';
+          let originalIDReverse = tagInfo.findTag(CardIDTag, card.ID, 'sr')?.Original || '';
           let result1 = new singleLinePattern(
             card,
             regArr[0],
@@ -258,15 +239,7 @@ export class MultiLineParser implements PatternParser {
       let newID = `#${CardIDTag}/${card.ID}/m/${cyrb53(regArr[0], 4)}`;
       let tagInfo = TagParser.parse(regArr[2] || '');
       let originalID = tagInfo.findTag(CardIDTag, card.ID, 'm')?.Original || '';
-      let result = new multiLinePattern(
-        card,
-        regArr[0],
-        regArr[1],
-        regArr[3],
-        originalID,
-        originalID || newID,
-        false
-      );
+      let result = new multiLinePattern(card, regArr[0], regArr[1], regArr[3], originalID, originalID || newID, false);
       results.push(result);
     }
     return results;

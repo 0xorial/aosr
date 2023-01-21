@@ -1,7 +1,7 @@
-import { CardIDTag } from 'cardHead';
+import { CardIDTag } from 'src/cardHead';
 import { ItemView } from 'obsidian';
-import { Operation, PatternSchedule } from 'schedule';
-import { TagParser } from 'tag';
+import { Operation, PatternSchedule } from 'src/schedule';
+import { TagParser } from 'src/tag';
 import { Card } from './card';
 
 export type PatternProps = {
