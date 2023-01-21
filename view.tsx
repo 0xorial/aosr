@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 import {
   Box,
   Chip,
@@ -9,20 +10,15 @@ import {
   Stack,
 } from '@mui/material';
 import Button from '@mui/material/Button';
-import { Arrangement, PatternIter } from 'arrangement';
-import { EditorPosition, ItemView, MarkdownView, View } from 'obsidian';
+import { Arrangement } from 'arrangement';
+import { EditorPosition, ItemView, MarkdownView } from 'obsidian';
 import { Pattern } from 'Pattern';
 import * as React from 'react';
 import { createRoot, Root } from 'react-dom/client';
-import {
-  LearnEnum,
-  LearnOpt,
-  Operation,
-  ReviewEnum,
-  ReviewOpt,
-} from 'schedule';
+import { Operation, ReviewEnum, ReviewOpt } from 'schedule';
 import LinearProgress from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
+import { useAsyncCallback } from './hooks/useAsyncCallback';
 
 function LinearProgressWithLabel(props: { value1: number; value2: number }) {
   const value = (props.value1 / props.value2) * 100;
@@ -50,22 +46,6 @@ type ReviewingProps = {
   arrangeName: string;
 };
 
-// Brain state flags when no answer is seen
-enum markEnum {
-  NOTSURE,
-  KNOWN,
-  FORGET,
-}
-
-type ReviewingState = {
-  nowPattern: Pattern | undefined;
-  showAnswer: boolean;
-  mark: markEnum;
-  patternIter: AsyncGenerator<PatternIter, boolean, unknown>;
-  index: number;
-  total: number;
-};
-
 function ReviewingHeader({
   index,
   total,
@@ -86,7 +66,7 @@ function ReviewingHeader({
       leaf = app.workspace.getLeaf(true);
     }
     await leaf.openFile(pattern.card.note);
-    let view = app.workspace.getActiveViewOfType(MarkdownView);
+    const view = app.workspace.getActiveViewOfType(MarkdownView);
     if (!view) {
       return;
     }
@@ -227,17 +207,20 @@ function Reviewing2({
     [arrangeName, arrangement]
   );
 
-  React.useEffect(async () => {
-    let result = await patternIter.next();
-    if (result.done) {
-      goStage(ReviewStage.Loading);
-      return;
-    }
-    setIndex(result.value.index);
-    setTotal(result.value.total);
-    setNowPattern(result.value.pattern);
-    patternIter.next();
-  }, [patternIter]);
+  useAsyncCallback(
+    async ({ wrap }) => {
+      let result = await wrap(patternIter.next());
+      if (result.done) {
+        goStage(ReviewStage.Loading);
+        return;
+      }
+      setIndex(result.value.index);
+      setTotal(result.value.total);
+      setNowPattern(result.value.pattern);
+      patternIter.next();
+    },
+    [patternIter]
+  );
 
   const next = async () => {
     let result = await patternIter.next();
@@ -285,12 +268,14 @@ type MaindeskProps = {
   setArrangement: (arrangeName: string) => void;
 };
 
-type MaindeskState = {};
-
-class MaindeskComponent extends React.Component<MaindeskProps, MaindeskState> {
+class MaindeskComponent extends React.Component<
+  MaindeskProps,
+  Record<string, never>
+> {
   constructor(props: any) {
     super(props);
   }
+
   render(): React.ReactNode {
     return (
       <Box>
@@ -343,6 +328,7 @@ type ReviewState = {
 
 class ReviewComponent extends React.Component<ReviewProps, ReviewState> {
   private syncFlag: boolean;
+
   async sync() {
     if (this.syncFlag) {
       return;
@@ -358,9 +344,11 @@ class ReviewComponent extends React.Component<ReviewProps, ReviewState> {
     });
     this.syncFlag = false;
   }
+
   componentDidMount() {
     this.sync();
   }
+
   constructor(props: ReviewProps) {
     super(props);
     this.syncFlag = false;
@@ -370,6 +358,7 @@ class ReviewComponent extends React.Component<ReviewProps, ReviewState> {
       arrangeName: '',
     };
   }
+
   goStage = (stage: ReviewStage) => {
     this.setState({
       stage: stage,
@@ -383,6 +372,7 @@ class ReviewComponent extends React.Component<ReviewProps, ReviewState> {
       arrangeName: arrangeName,
     });
   };
+
   render(): React.ReactNode {
     if (this.state.stage == ReviewStage.Loading) {
       return <LoadingComponent></LoadingComponent>;
@@ -426,17 +416,21 @@ function App(props: props) {
 // Card review view
 export class ReviewView extends ItemView {
   root?: Root;
+
   getViewType(): string {
     return VIEW_TYPE_REVIEW;
   }
+
   getDisplayText(): string {
     return 'AOSR';
   }
+
   async onload() {
     let rootDiv = this.containerEl.children[1].createDiv();
     this.root = createRoot(rootDiv);
     this.root.render(<App view={this}></App>);
   }
+
   onunload(): void {
     this.root?.unmount();
   }
