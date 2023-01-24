@@ -4,11 +4,15 @@ import { Arrangement } from 'src/old/arrangement';
 import { EditorPosition, ItemView, MarkdownView } from 'obsidian';
 import { Pattern } from 'src/old/Pattern';
 import * as React from 'react';
+import { useEffect, useState } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { Operation, ReviewEnum, ReviewOpt } from 'src/old/schedule';
 import LinearProgress from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
 import { useAsyncCallback } from './hooks/useAsyncCallback';
+import { OverviewComponent } from './OverviewComponent';
+import { Deck, loadDecks } from './model';
+import { DeckReviewComponent } from './DeckReviewComponent';
 
 function LinearProgressWithLabel(props: { value1: number; value2: number }) {
   const value = (props.value1 / props.value2) * 100;
@@ -257,23 +261,22 @@ class MaindeskComponent extends React.Component<MaindeskProps, Record<string, ne
   }
 }
 
-type ReviewProps = {
-  view: ItemView;
-};
-
 enum ReviewStage {
   Loading,
   Maindesk,
   Reviewing,
 }
 
-type ReviewState = {
-  stage: ReviewStage;
-  arrangement: Arrangement;
-  arrangeName: string;
-};
-
-class ReviewComponent extends React.Component<ReviewProps, ReviewState> {
+class ReviewComponent extends React.Component<
+  {
+    view: ItemView;
+  },
+  {
+    stage: ReviewStage;
+    arrangement: Arrangement;
+    arrangeName: string;
+  }
+> {
   private syncFlag: boolean;
 
   async sync() {
@@ -296,7 +299,7 @@ class ReviewComponent extends React.Component<ReviewProps, ReviewState> {
     this.sync();
   }
 
-  constructor(props: ReviewProps) {
+  constructor(props: { view: ItemView }) {
     super(props);
     this.syncFlag = false;
     this.state = {
@@ -346,15 +349,27 @@ class ReviewComponent extends React.Component<ReviewProps, ReviewState> {
   }
 }
 
-type props = {
-  view: ItemView;
-};
+function App({ view }: { view: ItemView }) {
+  const [decks, setDecks] = useState<Deck[] | 'loading'>('loading');
+  const [selectedDeck, setSelectedDeck] = useState<Deck>();
 
-function App(props: props) {
+  useEffect(() => {
+    setDecks(loadDecks());
+  }, []);
+
+  if (decks === 'loading') {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="markdown-preview-view markdown-rendered is-readable-line-width allow-fold-headings">
       <div className="markdown-preview-sizer markdown-preview-section">
-        <ReviewComponent view={props.view}></ReviewComponent>
+        {/*<ReviewComponent view={view}></ReviewComponent>*/}
+        {selectedDeck ? (
+          <DeckReviewComponent deck={selectedDeck} />
+        ) : (
+          <OverviewComponent decks={decks} onDeckSelected={(d) => setSelectedDeck(d)} />
+        )}
       </div>
     </div>
   );
