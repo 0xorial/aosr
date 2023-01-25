@@ -1,22 +1,26 @@
 import { CardType } from './model';
 
+function replaceAll(str: string, match: string, replacement: string) {
+  return str.split(match).join(replacement);
+}
+
 // taken from https://github.com/st3v3nmw/obsidian-spaced-repetition
 export function parseDecks(
   text: string,
+  convertHighlightsToClozes = true,
+  convertBoldTextToClozes = true,
+  convertCurlyBracketsToClozes = true,
   singlelineCardSeparator = '::',
   singlelineReversedCardSeparator = ':::',
   multilineCardSeparator = '?',
-  multilineReversedCardSeparator = '??',
-  convertHighlightsToClozes: boolean,
-  convertBoldTextToClozes: boolean,
-  convertCurlyBracketsToClozes: boolean
+  multilineReversedCardSeparator = '??'
 ): [CardType, string, number][] {
   let cardText = '';
   const cards: [CardType, string, number][] = [];
   let cardType: CardType | null = null;
   let lineNo = 0;
 
-  const lines: string[] = text.replaceAll('\r\n', '\n').split('\n');
+  const lines: string[] = replaceAll(text, '\r\n', '\n').split('\n');
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].length === 0) {
       if (cardType) {
@@ -65,7 +69,7 @@ export function parseDecks(
       cardType = CardType.MultiLineReversed;
       lineNo = i;
     } else if (lines[i].startsWith('```') || lines[i].startsWith('~~~')) {
-      const codeBlockClose = lines[i].match(/`+|~+/)[0];
+      const codeBlockClose = lines[i].match(/`+|~+/)![0];
       while (i + 1 < lines.length && !lines[i + 1].startsWith(codeBlockClose)) {
         i++;
         cardText += '\n' + lines[i];

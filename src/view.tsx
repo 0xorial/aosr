@@ -4,7 +4,7 @@ import { Arrangement } from 'src/old/arrangement';
 import { EditorPosition, ItemView, MarkdownView } from 'obsidian';
 import { Pattern } from 'src/old/Pattern';
 import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { Operation, ReviewEnum, ReviewOpt } from 'src/old/schedule';
 import LinearProgress from '@mui/material/LinearProgress';
@@ -13,6 +13,7 @@ import { useAsyncCallback } from './hooks/useAsyncCallback';
 import { OverviewComponent } from './OverviewComponent';
 import { Deck, loadDecks } from './model';
 import { DeckReviewComponent } from './DeckReviewComponent';
+import { useAsyncEffect } from './hooks/useAsyncEffect';
 
 function LinearProgressWithLabel(props: { value1: number; value2: number }) {
   const value = (props.value1 / props.value2) * 100;
@@ -353,8 +354,8 @@ function App({ view }: { view: ItemView }) {
   const [decks, setDecks] = useState<Deck[] | 'loading'>('loading');
   const [selectedDeck, setSelectedDeck] = useState<Deck>();
 
-  useEffect(() => {
-    setDecks(loadDecks());
+  useAsyncEffect(async ({ wrap }) => {
+    setDecks(await wrap(loadDecks()));
   }, []);
 
   if (decks === 'loading') {
