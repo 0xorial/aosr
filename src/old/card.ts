@@ -1,7 +1,7 @@
-import { AnnotationObject, AnnotationWrapper } from 'src/old/annotationParse';
-import { UpdateCardIDTag } from 'src/old/cardHead';
+import { AnnotationObject, AnnotationWrapper } from './annotationParse';
+import { UpdateCardIDTag } from './cardHead';
 import { TFile } from 'obsidian';
-import { CardSchedule, PatternSchedule } from 'src/old/schedule';
+import { CardSchedule, PatternSchedule } from './schedule';
 import { cyrb53 } from './hash';
 import { ParserCollection } from './ParserCollection';
 import { Pattern } from './Pattern';
@@ -46,7 +46,7 @@ export function NewCard(
 
 // Update original text
 class updateInfo {
-  updateFunc: (fileText: string) => string;
+  updateFunc?: (fileText: string) => string;
 }
 
 // Implementation of the default card
@@ -56,9 +56,9 @@ class defaultCard implements Card {
   note: TFile;
   originalID = '';
   patterns: Pattern[];
-  schedules: CardSchedule;
+  schedules?: CardSchedule;
   indexBuff: number;
-  annotationObj: AnnotationObject;
+  annotationObj?: AnnotationObject;
   updateList: updateInfo[];
   cardText: string;
   static bodySplitReg = /((?:^(?!\*{3,}$).+$\n?)+)/gm;
@@ -96,7 +96,7 @@ class defaultCard implements Card {
     this.updateList.push(info);
   }
   getSchedule(patternID: string): PatternSchedule {
-    return this.schedules.getSchedule(patternID);
+    return this.schedules!.getSchedule(patternID);
   }
   // ID Prioritize the use of the original ID, when it does not exist, it will be the hash result of the card
   get ID(): string {
@@ -107,7 +107,7 @@ class defaultCard implements Card {
   }
   // Update comment block content
   private updateAnnotation(fileText: string): string {
-    let newAnnotation = AnnotationObject.Stringify(this.annotationObj);
+    let newAnnotation = AnnotationObject.Stringify(this.annotationObj!);
     newAnnotation = AnnotationWrapper.enWrapper(this.ID, newAnnotation);
     if (this.annotationWrapperStr?.length > 0) {
       fileText = fileText.replace(this.annotationWrapperStr, newAnnotation);
@@ -144,7 +144,7 @@ class defaultCard implements Card {
       fileText = this.updateAnnotation(fileText);
       // update review block
       for (const updateInfo of this.updateList) {
-        fileText = updateInfo.updateFunc(fileText);
+        fileText = updateInfo!.updateFunc(fileText);
       }
       this.updateList = [];
     }

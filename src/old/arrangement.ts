@@ -1,6 +1,6 @@
-import { NewCardSearch } from 'src/old/cardSearch';
-import { CardsWatcher, NewCardsWatch } from 'src/old/cardWatcher';
-import { Pattern } from 'src/old/Pattern';
+import { NewCardSearch } from './cardSearch';
+import { CardsWatcher, NewCardsWatch } from './cardWatcher';
+import { Pattern } from './Pattern';
 
 class ArrangementItem {
   Name: string;
@@ -31,9 +31,9 @@ export class Arrangement implements ArrangementBase {
   private allPattern: Pattern[];
   private newPattern: Pattern[];
   private needReviewPattern: Pattern[];
-  private needLearn: Pattern[];
-  private wait: Pattern[];
-  private watcher: CardsWatcher;
+  private needLearn?: Pattern[];
+  private wait?: Pattern[];
+  private watcher?: CardsWatcher;
   constructor() {
     this.allPattern = [];
     this.newPattern = [];
@@ -61,11 +61,11 @@ export class Arrangement implements ArrangementBase {
     if (this.needReviewPattern.length > 0) {
       retlist.push(new ArrangementItem('review', this.needReviewPattern.length));
     }
-    if (this.needLearn.length > 0) {
-      retlist.push(new ArrangementItem('learn', this.needLearn.length));
+    if (this.needLearn!.length > 0) {
+      retlist.push(new ArrangementItem('learn', this.needLearn!.length));
     }
-    if (this.wait.length > 0) {
-      retlist.push(new ArrangementItem('wait', this.wait.length));
+    if (this.wait!.length > 0) {
+      retlist.push(new ArrangementItem('wait', this.wait!.length));
     }
     return retlist;
   }
@@ -104,7 +104,7 @@ export class Arrangement implements ArrangementBase {
     });
   }
   async findLivePattern(p: Pattern): Promise<Pattern | undefined> {
-    const liveCard = await this.watcher.getLiveCard(p.card.ID);
+    const liveCard = await this.watcher!.getLiveCard(p.card.ID);
     if (!liveCard) {
       return;
     }
@@ -135,11 +135,11 @@ export class Arrangement implements ArrangementBase {
       }
     }
     if (name == 'learn') {
-      for (let i = 0; i < this.needLearn.length; i++) {
-        const p = this.needLearn[i];
+      for (let i = 0; i < this.needLearn!.length; i++) {
+        const p = this.needLearn![i];
         const cardp = await this.findLivePattern(p);
         if (cardp) {
-          yield new PatternIter(cardp, i, this.needLearn.length);
+          yield new PatternIter(cardp, i, this.needLearn!.length);
         }
       }
     }

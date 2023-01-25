@@ -1,13 +1,13 @@
-import { Card } from 'src/old/card';
-import { CardIDTag } from 'src/old/cardHead';
-import { cyrb53 } from 'src/old/hash';
-import { renderMarkdown } from 'src/old/markdown';
-import { NodeContainer } from 'src/old/nodeContainer';
-import { PatternParser } from 'src/old/ParserCollection';
-import { Pattern, PatternProps, prettyText } from 'src/old/Pattern';
+import { Card } from './card';
+import { CardIDTag } from './cardHead';
+import { cyrb53 } from './hash';
+import { renderMarkdown } from './markdown';
+import { NodeContainer } from './nodeContainer';
+import { PatternParser } from './ParserCollection';
+import { Pattern, PatternProps, prettyText } from './Pattern';
 import React from 'react';
-import { Operation } from 'src/old/schedule';
-import { TagParser } from 'src/old/tag';
+import { Operation } from './schedule';
+import { TagParser } from './tag';
 
 const hasClozeReg = /==(\S[\s\S]*?)==/m;
 const clozeReg = /==(\S[\s\S]*?)==/gm;

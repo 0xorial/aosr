@@ -1,4 +1,4 @@
-import AOSRPlugin from 'src/main';
+import AOSRPlugin from '../main';
 import { App, PluginSettingTab, Setting } from 'obsidian';
 
 export interface AOSRSettings {

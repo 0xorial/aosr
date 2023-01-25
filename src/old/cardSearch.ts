@@ -1,7 +1,7 @@
-import { AnnotationWrapper } from 'src/old/annotationParse';
-import { CardIDTag } from 'src/old/cardHead';
+import { AnnotationWrapper } from './annotationParse';
+import { CardIDTag } from './cardHead';
 import { TFile } from 'obsidian';
-import { TagParser } from 'src/old/tag';
+import { TagParser } from './tag';
 import { Card, NewCard } from './card';
 
 // search results

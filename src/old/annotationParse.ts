@@ -1,4 +1,4 @@
-import { CardSchedule } from 'src/old/schedule';
+import { CardSchedule } from './schedule';
 import yaml from 'yaml';
 
 export class AnnotationWrapper {

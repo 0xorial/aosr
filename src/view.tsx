@@ -1,12 +1,11 @@
 import { Box, Chip, List, ListItem, ListItemButton, ListItemText, Paper, Stack } from '@mui/material';
 import Button from '@mui/material/Button';
-import { Arrangement } from 'src/old/arrangement';
+import { Arrangement } from './old/arrangement';
 import { EditorPosition, ItemView, MarkdownView } from 'obsidian';
-import { Pattern } from 'src/old/Pattern';
+import { Pattern } from './old/Pattern';
 import * as React from 'react';
 import { useState } from 'react';
 import { createRoot, Root } from 'react-dom/client';
-import { Operation, ReviewEnum, ReviewOpt } from 'src/old/schedule';
 import LinearProgress from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
 import { useAsyncCallback } from './hooks/useAsyncCallback';
@@ -14,6 +13,7 @@ import { OverviewComponent } from './OverviewComponent';
 import { Deck, loadDecks } from './model';
 import { DeckReviewComponent } from './DeckReviewComponent';
 import { useAsyncEffect } from './hooks/useAsyncEffect';
+import { Operation, ReviewEnum, ReviewOpt } from './old/schedule';
 
 function LinearProgressWithLabel(props: { value1: number; value2: number }) {
   const value = (props.value1 / props.value2) * 100;
@@ -350,6 +350,9 @@ class ReviewComponent extends React.Component<
   }
 }
 
+export function Hello() {
+  return <div>Hello world</div>;
+}
 function App({ view }: { view: ItemView }) {
   const [decks, setDecks] = useState<Deck[] | 'loading'>('loading');
   const [selectedDeck, setSelectedDeck] = useState<Deck>();

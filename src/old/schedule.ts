@@ -1,4 +1,4 @@
-import { GlobalSettings } from 'src/old/setting';
+import { GlobalSettings } from './setting';
 
 export enum ReviewEnum {
   // Won't
@@ -52,9 +52,9 @@ export interface scheduleCalc {
 }
 
 class LearnInfo {
-  IsLearn: boolean;
-  IsNew: boolean;
-  IsWait: boolean;
+  IsLearn?: boolean;
+  IsNew?: boolean;
+  IsWait?: boolean;
 }
 
 export interface scheduleArrange {
@@ -84,9 +84,9 @@ export interface PatternYaml {
   // learning operation record
   Opts: string;
   // Last marked as forgotten, time of last review
-  Learned: string | null;
+  Learned?: string;
   // The last time it was marked as forgotten, the number of times it was reviewed after that
-  LearnedCount: number | null;
+  LearnedCount?: number;
 
   // The schedule yaml format used to read the storage needs to copy the object
   copy(v: PatternYaml): void;
@@ -112,8 +112,8 @@ export class defaultSchedule implements PatternSchedule {
   Last: string;
   Next: string;
   Opts: string;
-  Learned: string | null;
-  LearnedCount: number | null;
+  Learned?: string;
+  LearnedCount?: number;
 
   get LearnedTime(): moment.Moment {
     if (!this.Learned) {
@@ -287,8 +287,8 @@ export class defaultSchedule implements PatternSchedule {
 
   // clear study results
   private clearLearn() {
-    this.LearnedCount = null;
-    this.Learned = null;
+    this.LearnedCount = undefined;
+    this.Learned = undefined;
   }
 
   get IsNew(): boolean {
@@ -341,7 +341,7 @@ export class CardSchedule {
     for (const [k, v] of map1) {
       const schedule = NewSchedule(k);
       schedule.copy(v);
-      this.schedules.set(k, schedule);
+      this.schedules.set(k, schedule!);
     }
   }
 
