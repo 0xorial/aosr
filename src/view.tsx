@@ -349,10 +349,6 @@ class ReviewComponent extends React.Component<
     }
   }
 }
-
-export function Hello() {
-  return <div>Hello world</div>;
-}
 function App({ view }: { view: ItemView }) {
   const [decks, setDecks] = useState<Deck[] | 'loading'>('loading');
   const [selectedDeck, setSelectedDeck] = useState<Deck>();

@@ -1,8 +1,9 @@
-import { mount } from 'enzyme';
-import { Hello } from '../src/view';
 import React from 'react';
+import '@testing-library/jest-dom/extend-expect';
+import { Hello } from '../src/test-view';
+import { render } from '@testing-library/react';
 
-test('<view/>', (cb) => {
-  const wrapper = mount(<Hello />);
-  console.log(wrapper.childAt(0));
+test('<view/>', () => {
+  const wrapper = render(<Hello />);
+  expect(wrapper.container).toHaveTextContent('Hello world');
 });

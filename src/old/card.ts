@@ -144,7 +144,7 @@ class defaultCard implements Card {
       fileText = this.updateAnnotation(fileText);
       // update review block
       for (const updateInfo of this.updateList) {
-        fileText = updateInfo!.updateFunc(fileText);
+        fileText = updateInfo!.updateFunc!(fileText);
       }
       this.updateList = [];
     }

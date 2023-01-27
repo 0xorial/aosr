@@ -1,5 +1,6 @@
 import { CardSchedule } from './schedule';
-import yaml from 'yaml';
+
+// import yaml from 'yaml';
 
 export class AnnotationWrapper {
   static defaultRegAnnotation = String.raw`%%[^\%\^]+?%%\n\^blockID`;
@@ -38,14 +39,15 @@ export class AnnotationObject {
       return new AnnotationObject();
     }
     const ret = new AnnotationObject();
-    const obj: AnnotationObject = yaml.parse(annotation);
+    const obj: AnnotationObject = null!; //yaml.parse(annotation);
     ret.copy(obj);
     return ret;
   }
   static Stringify(fmt: AnnotationObject): string {
-    const s = yaml.stringify(fmt, (key, value) => {
-      if (value !== null) return value;
-    });
-    return s;
+    return '';
+    // const s = yaml.stringify(fmt, (key, value) => {
+    //   if (value !== null) return value;
+    // });
+    // return s;
   }
 }

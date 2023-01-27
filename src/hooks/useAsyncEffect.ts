@@ -1,6 +1,6 @@
-import {useRef, useState} from 'react';
-import {useEffectDebug} from './useEffectDebug';
-import {LinkedList} from '../events/LinkedList';
+import { useRef, useState } from 'react';
+import { useEffectDebug } from './useEffectDebug';
+import { LinkedList } from './linked-list';
 
 export type AsyncEffectFuncContext = {
   wrap: <T>(p: Promise<T>) => Promise<T>;
@@ -13,7 +13,7 @@ export function useAsyncEffect(
   createGenerator: AsyncEffectFunc,
   deps: React.DependencyList,
   errorCallback: ((error: any) => void) | null = null
-): {trigger: () => Promise<void>} {
+): { trigger: () => Promise<void> } {
   const [counter, setCounter] = useState(0);
   const cleanupRef = useRef<() => void>();
   const pendingPromises = useRef(
@@ -52,7 +52,7 @@ export function useAsyncEffect(
         }
         // async calls should have been canceled through 'wrap' function
         const promises = pendingPromises.current.toArray();
-        for (let promise of promises) {
+        for (const promise of promises) {
           promise.resolve();
         }
       })
@@ -60,7 +60,7 @@ export function useAsyncEffect(
         console.error(e);
         if (errorCallback) errorCallback(e);
         const promises = pendingPromises.current.toArray();
-        for (let promise of promises) {
+        for (const promise of promises) {
           promise.reject(e);
         }
       });
@@ -73,7 +73,6 @@ export function useAsyncEffect(
     };
     // we do not want to demand callers to use useCallback on createGenerator and errorCallback
     // to make usage less verbose
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps, counter]);
 
   return {
