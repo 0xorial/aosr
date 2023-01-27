@@ -7,3 +7,8 @@ test('<view/>', () => {
   const wrapper = render(<Hello />);
   expect(wrapper.container).toHaveTextContent('Hello world');
 });
+
+test('should load items', () => {
+  const wrapper = render(<Hello />);
+  expect(wrapper.container).toHaveTextContent('Hello world');
+});

@@ -1,8 +1,10 @@
-import { TFile } from 'obsidian';
-import { parseDecks } from './parser';
+import { FileType, ObsidianAdapterContextType } from './obsidian-context';
+import { parseDecks2 } from './parser';
+import { emptyParseResult, mergeParseResults, ParseResult } from './parse-result';
 
 export type RepeatItem = {
   question: string;
+  answer: string;
 };
 
 export type Deck = {
@@ -10,41 +12,25 @@ export type Deck = {
   name: string;
 };
 
-export async function loadDecks(): Promise<Deck[]> {
-  const notes: TFile[] = app.vault.getMarkdownFiles();
+export type ParseOptions = {
+  deckTagPrefix: string;
+};
+
+export async function loadDecks(obsidian: ObsidianAdapterContextType, o: ParseOptions): Promise<ParseResult> {
+  const notes = obsidian.getMarkdownFiles();
+  let result = emptyParseResult;
   for (const note of notes) {
-    await loadDecksFromFile(note);
+    const fileDecks = await loadDecksFromFile(note, o);
+    result = mergeParseResults(result, fileDecks);
   }
-  return [];
+  return result;
 }
 
-async function loadDecksFromFile(note: TFile) {
-  const fileText = await app.vault.read(note);
-  parseDecks(fileText);
-  // workaround If there is no extra newline after the last card of the text, the regular expression cannot match
-  // fileText += "\n"
-  // const results = fileText.matchAll(this.matchReg);
-  // for (const result of results) {
-  //   // match comment segment
-  //   const cardText = result[0];
-  //   const index = result.index || 0;
-  //   const tags = TagParser.parse(result[1]);
-  //   const idTag = tags.findTag(CardIDTag);
-  //   const blockID = idTag?.Suffix || '';
-  //   let annotation = '';
-  //   if (blockID != '') {
-  //     annotation = AnnotationWrapper.findAnnotationWrapper(fileText, blockID);
-  //   }
-  //   const content = result[2];
-  //   const card: Card = NewCard(cardText, content, annotation, blockID, index, note);
-  //   callback(card);
-  // }
-}
-
-export enum CardType {
-  SingleLineBasic,
-  SingleLineReversed,
-  MultiLineBasic,
-  MultiLineReversed,
-  Cloze,
+async function loadDecksFromFile(note: FileType, o: ParseOptions): Promise<ParseResult> {
+  const tags = note.getTags();
+  if (!tags.find((x) => x.name.startsWith(o.deckTagPrefix))) {
+    return emptyParseResult;
+  }
+  const fileText = await note.readFile();
+  return parseDecks2(fileText, o.deckTagPrefix);
 }

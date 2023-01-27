@@ -1,7 +1,58 @@
 import { CardType } from './model';
+import { ParseResult } from './parse-result';
+import { Position } from './obsidian-context';
 
 function replaceAll(str: string, match: string, replacement: string) {
   return str.split(match).join(replacement);
+}
+
+type LineWithPos = {
+  content: string;
+  // number of characters before the first character of this line
+  startOffset: number;
+};
+
+function breakIntoLines(text: string): LineWithPos[] {
+  const r: LineWithPos[] = [];
+  let i = -1;
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const lineStart = i;
+    i = text.indexOf('\r', i);
+    if (i < 0) {
+      if (text.length > 0 && r.length === 0) {
+        return [{ content: text, startOffset: 0 }];
+      }
+      return r;
+    }
+
+    if (text[i + 1] === '\n') {
+      i++;
+    }
+
+    r.push({ content: text.substring(lineStart, i), startOffset: lineStart });
+  }
+  return r;
+}
+
+function trySplitExact(line: string, separator: string) {
+  
+}
+
+export function parseDecks2(text: string, tagPrefix: string): ParseResult {
+  const cards: { question: string; answer: string; position: Position; metadata: string }[] = [];
+  const lines = breakIntoLines(text);
+  const state: 'free-text' | 'multiline-card-start' = 'free-text';
+  for (const line of lines) {
+    if (state === 'free-text') {
+      // let hasDoubleSplit = line.contains('::');
+      const hasTripleSplit = line.content.contains(':::');
+      if (hasTripleSplit) {
+        cards.push({question: });
+      }
+    }
+  }
 }
 
 // taken from https://github.com/st3v3nmw/obsidian-spaced-repetition
@@ -14,8 +65,9 @@ export function parseDecks(
   singlelineReversedCardSeparator = ':::',
   multilineCardSeparator = '?',
   multilineReversedCardSeparator = '??'
-): [CardType, string, number][] {
+): [CardType, string, string, number][] {
   let cardText = '';
+  let deckName = '';
   const cards: [CardType, string, number][] = [];
   let cardType: CardType | null = null;
   let lineNo = 0;
