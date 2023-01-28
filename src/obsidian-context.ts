@@ -1,14 +1,8 @@
 import { createContext, useContext } from 'react';
 
-export type Location = {
-  line: number;
-  col: number;
-  offset: number;
-};
-
 export type Position = {
-  start: Location;
-  end: Location;
+  start: number;
+  end: number;
 };
 
 export type Tag = {

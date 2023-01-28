@@ -1,7 +1,9 @@
 import { RepeatItem } from './model';
 
+export type ParseError = { start: number; end: number; message: string };
+
 export type ParseResult = {
-  errors: Array<{ start: number; end: number }>;
+  errors: Array<ParseError>;
   decks: Array<{ path: string; items: RepeatItem[] }>;
 };
 

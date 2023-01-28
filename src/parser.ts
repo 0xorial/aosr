@@ -1,5 +1,4 @@
-import { CardType } from './model';
-import { ParseResult } from './parse-result';
+import { ParseError, ParseResult } from './parse-result';
 import { Position } from './obsidian-context';
 
 function replaceAll(str: string, match: string, replacement: string) {
@@ -36,23 +35,111 @@ function breakIntoLines(text: string): LineWithPos[] {
   return r;
 }
 
-function trySplitExact(line: string, separator: string) {
-  
-}
-
 export function parseDecks2(text: string, tagPrefix: string): ParseResult {
-  const cards: { question: string; answer: string; position: Position; metadata: string }[] = [];
+  const cards: { question: string; answer: string; position: Position; metadata: string; isReverse: boolean }[] = [];
+  const errors: ParseError[] = [];
   const lines = breakIntoLines(text);
-  const state: 'free-text' | 'multiline-card-start' = 'free-text';
+  let state: 'free-text' | 'multiline-card-start' | 'multiline-card-end' = 'free-text';
+  let isReverseMultiline = false;
+  let firstPartMultilineContent = [];
+  let secondPartMultilineContent = [];
+  let comment: string | null = null;
   for (const line of lines) {
     if (state === 'free-text') {
-      // let hasDoubleSplit = line.contains('::');
+      const hasDoubleSplit = line.content.contains('::');
       const hasTripleSplit = line.content.contains(':::');
-      if (hasTripleSplit) {
-        cards.push({question: });
+      const isComment = line.content.startsWith('%%');
+      if (isComment) {
+        comment = line.content;
+      } else if (hasTripleSplit) {
+        const parts = line.content.split(':::');
+        if (parts.length !== 2) {
+          errors.push({
+            start: line.startOffset,
+            end: line.startOffset + line.content.length,
+            message: 'Multiple separators found in the line',
+          });
+        } else {
+          cards.push({
+            question: parts[0],
+            answer: parts[1],
+            position: { start: line.startOffset, end: line.startOffset + line.content.length },
+            metadata: comment ?? '',
+            isReverse: false,
+          });
+          cards.push({
+            question: parts[1],
+            answer: parts[0],
+            position: { start: line.startOffset, end: line.startOffset + line.content.length },
+            metadata: comment ?? '',
+            isReverse: true,
+          });
+          comment = null;
+        }
+      } else if (hasDoubleSplit) {
+        const parts = line.content.split(':::');
+        if (parts.length !== 2) {
+          errors.push({
+            start: line.startOffset,
+            end: line.startOffset + line.content.length,
+            message: 'Multiple separators found in the line',
+          });
+        } else {
+          cards.push({
+            question: parts[0],
+            answer: parts[1],
+            position: { start: line.startOffset, end: line.startOffset + line.content.length },
+            metadata: comment ?? '',
+            isReverse: false,
+          });
+          comment = null;
+        }
+      } else if (line.content === '??') {
+      } else {
+        state = 'multiline-card-start';
+        firstPartMultilineContent.push(line);
+      }
+    } else if (state === 'multiline-card-start') {
+      if (line.content === '?') {
+        state = 'multiline-card-end';
+        isReverseMultiline = true;
+      } else if (line.content === '??') {
+        isReverseMultiline = false;
+      } else {
+        firstPartMultilineContent.push(line);
+      }
+    } else if (state === 'multiline-card-end') {
+      if (line.content === '') {
+        state = 'multiline-card-end';
+        const last = secondPartMultilineContent[secondPartMultilineContent.length - 1];
+        const question = firstPartMultilineContent.map((x) => x.content).join('\n');
+        const answer = secondPartMultilineContent.map((x) => x.content).join('\n');
+        cards.push({
+          position: { start: firstPartMultilineContent[0].startOffset, end: last.startOffset + last.content.length },
+          question,
+          answer,
+          metadata: comment ?? '',
+          isReverse: false,
+        });
+        if (isReverseMultiline) {
+          cards.push({
+            position: { start: firstPartMultilineContent[0].startOffset, end: last.startOffset + last.content.length },
+            answer,
+            question,
+            metadata: comment ?? '',
+            isReverse: true,
+          });
+        }
+        comment = null;
+        firstPartMultilineContent = [];
+        secondPartMultilineContent = [];
+      } else {
+        secondPartMultilineContent.push(line);
       }
     }
   }
+
+  return { decks: cards, errors };
 }
 
 // taken from https://github.com/st3v3nmw/obsidian-spaced-repetition

@@ -5,6 +5,7 @@ import { emptyParseResult, mergeParseResults, ParseResult } from './parse-result
 export type RepeatItem = {
   question: string;
   answer: string;
+  history: string;
 };
 
 export type Deck = {
