@@ -1,11 +1,16 @@
-import { FileType, ObsidianAdapterContextType } from './obsidian-context';
+import { FileType, ObsidianAdapterContextType, Position } from './obsidian-context';
 import { parseDecks2 } from './parser';
 import { emptyParseResult, mergeParseResults, ParseResult } from './parse-result';
 
 export type RepeatItem = {
   question: string;
+  questionOffset: number;
   answer: string;
-  history: string;
+  answerOffset: number;
+  position: Position;
+  metadata?: string;
+  isReverse: boolean;
+  clozePosition?: Position;
 };
 
 export type Deck = {

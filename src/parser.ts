@@ -1,9 +1,9 @@
 import { ParseError, ParseResult } from './parse-result';
-import { Position } from './obsidian-context';
+import { RepeatItem } from './model';
 
-function replaceAll(str: string, match: string, replacement: string) {
-  return str.split(match).join(replacement);
-}
+// function replaceAll(str: string, match: string, replacement: string) {
+//   return str.split(match).join(replacement);
+// }
 
 type LineWithPos = {
   content: string;
@@ -35,10 +35,35 @@ function breakIntoLines(text: string): LineWithPos[] {
   return r;
 }
 
+export function reverseCard(i: RepeatItem): RepeatItem {
+  return {
+    ...i,
+    answer: i.question,
+    question: i.answer,
+    questionOffset: i.answerOffset,
+    answerOffset: i.questionOffset,
+    isReverse: !i.isReverse,
+  };
+}
+
+export function reversePair(i: Omit<RepeatItem, 'isReverse'>): [RepeatItem, RepeatItem] {
+  const c = { ...i, isReverse: false };
+  return [
+    c,
+    {
+      ...reverseCard(c),
+    },
+  ];
+}
+
 export function parseDecks2(text: string, tagPrefix: string): ParseResult {
-  const cards: { question: string; answer: string; position: Position; metadata: string; isReverse: boolean }[] = [];
+  const cards: RepeatItem[] = [];
   const errors: ParseError[] = [];
   const lines = breakIntoLines(text);
+  if (lines[0].content.trim().startsWith(`#${tagPrefix}`)) {
+    return { decks: [], errors: [] };
+  }
+
   let state: 'free-text' | 'multiline-card-start' | 'multiline-card-end' = 'free-text';
   let isReverseMultiline = false;
   let firstPartMultilineContent = [];
@@ -49,6 +74,7 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
       const hasDoubleSplit = line.content.contains('::');
       const hasTripleSplit = line.content.contains(':::');
       const isComment = line.content.startsWith('%%');
+      const separatorOffset = line.content.indexOf(':::');
       if (isComment) {
         comment = line.content;
       } else if (hasTripleSplit) {
@@ -60,20 +86,16 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
             message: 'Multiple separators found in the line',
           });
         } else {
-          cards.push({
-            question: parts[0],
-            answer: parts[1],
-            position: { start: line.startOffset, end: line.startOffset + line.content.length },
-            metadata: comment ?? '',
-            isReverse: false,
-          });
-          cards.push({
-            question: parts[1],
-            answer: parts[0],
-            position: { start: line.startOffset, end: line.startOffset + line.content.length },
-            metadata: comment ?? '',
-            isReverse: true,
-          });
+          cards.push(
+            ...reversePair({
+              questionOffset: line.startOffset,
+              question: parts[0],
+              answerOffset: separatorOffset + 3,
+              answer: parts[1],
+              position: { start: line.startOffset, end: line.startOffset + line.content.length },
+              metadata: comment ?? '',
+            })
+          );
           comment = null;
         }
       } else if (hasDoubleSplit) {
@@ -86,7 +108,9 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
           });
         } else {
           cards.push({
+            questionOffset: line.startOffset,
             question: parts[0],
+            answerOffset: separatorOffset + 3,
             answer: parts[1],
             position: { start: line.startOffset, end: line.startOffset + line.content.length },
             metadata: comment ?? '',
@@ -94,7 +118,12 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
           });
           comment = null;
         }
-      } else if (line.content === '??') {
+      } else if (line.content === '??' || line.content === '?') {
+        errors.push({
+          start: line.startOffset,
+          end: line.startOffset + line.content.length,
+          message: 'Missing question',
+        });
       } else {
         state = 'multiline-card-start';
         firstPartMultilineContent.push(line);
@@ -114,21 +143,18 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
         const last = secondPartMultilineContent[secondPartMultilineContent.length - 1];
         const question = firstPartMultilineContent.map((x) => x.content).join('\n');
         const answer = secondPartMultilineContent.map((x) => x.content).join('\n');
-        cards.push({
+        const card: RepeatItem = {
           position: { start: firstPartMultilineContent[0].startOffset, end: last.startOffset + last.content.length },
           question,
           answer,
           metadata: comment ?? '',
           isReverse: false,
-        });
+          questionOffset: firstPartMultilineContent[0].startOffset,
+          answerOffset: secondPartMultilineContent[0].startOffset,
+        };
+        cards.push(card);
         if (isReverseMultiline) {
-          cards.push({
-            position: { start: firstPartMultilineContent[0].startOffset, end: last.startOffset + last.content.length },
-            answer,
-            question,
-            metadata: comment ?? '',
-            isReverse: true,
-          });
+          cards.push(reverseCard(card));
         }
         comment = null;
         firstPartMultilineContent = [];
@@ -140,87 +166,4 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
   }
 
   return { decks: cards, errors };
-}
-
-// taken from https://github.com/st3v3nmw/obsidian-spaced-repetition
-export function parseDecks(
-  text: string,
-  convertHighlightsToClozes = true,
-  convertBoldTextToClozes = true,
-  convertCurlyBracketsToClozes = true,
-  singlelineCardSeparator = '::',
-  singlelineReversedCardSeparator = ':::',
-  multilineCardSeparator = '?',
-  multilineReversedCardSeparator = '??'
-): [CardType, string, string, number][] {
-  let cardText = '';
-  let deckName = '';
-  const cards: [CardType, string, number][] = [];
-  let cardType: CardType | null = null;
-  let lineNo = 0;
-
-  const lines: string[] = replaceAll(text, '\r\n', '\n').split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].length === 0) {
-      if (cardType) {
-        cards.push([cardType, cardText, lineNo]);
-        cardType = null;
-      }
-
-      cardText = '';
-      continue;
-    } else if (lines[i].startsWith('<!--') && !lines[i].startsWith('<!--SR:')) {
-      while (i + 1 < lines.length && !lines[i].includes('-->')) i++;
-      i++;
-      continue;
-    }
-
-    if (cardText.length > 0) {
-      cardText += '\n';
-    }
-    cardText += lines[i];
-
-    if (lines[i].includes(singlelineReversedCardSeparator) || lines[i].includes(singlelineCardSeparator)) {
-      cardType = lines[i].includes(singlelineReversedCardSeparator)
-        ? CardType.SingleLineReversed
-        : CardType.SingleLineBasic;
-      cardText = lines[i];
-      lineNo = i;
-      if (i + 1 < lines.length && lines[i + 1].startsWith('<!--SR:')) {
-        cardText += '\n' + lines[i + 1];
-        i++;
-      }
-      cards.push([cardType, cardText, lineNo]);
-      cardType = null;
-      cardText = '';
-    } else if (
-      cardType === null &&
-      ((convertHighlightsToClozes && /==.*?==/gm.test(lines[i])) ||
-        (convertBoldTextToClozes && /\*\*.*?\*\*/gm.test(lines[i])) ||
-        (convertCurlyBracketsToClozes && /{{.*?}}/gm.test(lines[i])))
-    ) {
-      cardType = CardType.Cloze;
-      lineNo = i;
-    } else if (lines[i] === multilineCardSeparator) {
-      cardType = CardType.MultiLineBasic;
-      lineNo = i;
-    } else if (lines[i] === multilineReversedCardSeparator) {
-      cardType = CardType.MultiLineReversed;
-      lineNo = i;
-    } else if (lines[i].startsWith('```') || lines[i].startsWith('~~~')) {
-      const codeBlockClose = lines[i].match(/`+|~+/)![0];
-      while (i + 1 < lines.length && !lines[i + 1].startsWith(codeBlockClose)) {
-        i++;
-        cardText += '\n' + lines[i];
-      }
-      cardText += '\n' + codeBlockClose;
-      i++;
-    }
-  }
-
-  if (cardType && cardText) {
-    cards.push([cardType, cardText, lineNo]);
-  }
-
-  return cards;
 }
