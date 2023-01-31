@@ -1,14 +1,24 @@
-import { parseDecks2, reversePair } from '../src/parser';
+import { breakIntoLines, LineWithPos, parseDecks2, reversePair } from '../src/parser';
 import { Position } from '../src/obsidian-context';
 import { RepeatItem } from '../src/model';
 
+function offsetRepeatItem(result: RepeatItem, offset: number): RepeatItem {
+  return {
+    ...result,
+    answerOffset: result.answerOffset + offset,
+    questionOffset: result.questionOffset + offset,
+    position: { start: result.position.start + offset, end: result.position.end + offset },
+  };
+}
+
 function testS(text: string, result: RepeatItem) {
-  const r = parseDecks2('#flashcards\r\n' + text, 'flashcards');
-  expect(r).toEqual({ decks: [result] });
+  const prefix = '#flashcards\n';
+  const r = parseDecks2(prefix + text, 'flashcards');
+  expect(r).toEqual({ decks: [offsetRepeatItem(result, prefix.length)] });
 }
 
 function testA(text: string, result: RepeatItem[]) {
-  const r = parseDecks2('#flashcards\r\n' + text, 'flashcards');
+  const r = parseDecks2('#flashcards\n' + text, 'flashcards');
   expect(r).toEqual({ decks: result });
 }
 
@@ -16,11 +26,81 @@ function pos(from: number, to: number): Position {
   return { start: from, end: to };
 }
 
+function tb(t: string, r: LineWithPos[]) {
+  expect(breakIntoLines(t)).toEqual(r);
+}
+
+test('Linebreaking', () => {
+  tb('', []);
+  tb('aaa', [{ content: 'aaa', startOffset: 0 }]);
+
+  tb('aa\rbbb', [
+    { content: 'aa', startOffset: 0 },
+    { content: 'bbb', startOffset: 3 },
+  ]);
+  tb('aa\nbbb', [
+    { content: 'aa', startOffset: 0 },
+    { content: 'bbb', startOffset: 3 },
+  ]);
+  tb('aa\r\nbbb', [
+    { content: 'aa', startOffset: 0 },
+    { content: 'bbb', startOffset: 4 },
+  ]);
+
+  tb('aa\r\rbbb', [
+    { content: 'aa', startOffset: 0 },
+    { content: '', startOffset: 3 },
+    { content: 'bbb', startOffset: 4 },
+  ]);
+  tb('aa\n\nbbb', [
+    { content: 'aa', startOffset: 0 },
+    { content: '', startOffset: 3 },
+    { content: 'bbb', startOffset: 4 },
+  ]);
+  tb('aa\r\n\r\nbbb', [
+    { content: 'aa', startOffset: 0 },
+    { content: '', startOffset: 4 },
+    { content: 'bbb', startOffset: 6 },
+  ]);
+
+  tb('aa\rbbb\r', [
+    { content: 'aa', startOffset: 0 },
+    { content: 'bbb', startOffset: 3 },
+    { content: '', startOffset: 7 },
+  ]);
+  tb('aa\nbbb\n', [
+    { content: 'aa', startOffset: 0 },
+    { content: 'bbb', startOffset: 3 },
+    { content: '', startOffset: 7 },
+  ]);
+  tb('aa\r\nbbb\r\n', [
+    { content: 'aa', startOffset: 0 },
+    { content: 'bbb', startOffset: 4 },
+    { content: '', startOffset: 9 },
+  ]);
+
+  tb('aa\rbbb\rc', [
+    { content: 'aa', startOffset: 0 },
+    { content: 'bbb', startOffset: 3 },
+    { content: 'c', startOffset: 7 },
+  ]);
+  tb('aa\nbbb\nc', [
+    { content: 'aa', startOffset: 0 },
+    { content: 'bbb', startOffset: 3 },
+    { content: 'c', startOffset: 7 },
+  ]);
+  tb('aa\r\nbbb\r\nc', [
+    { content: 'aa', startOffset: 0 },
+    { content: 'bbb', startOffset: 4 },
+    { content: 'c', startOffset: 9 },
+  ]);
+});
+
 test('Test parsing of single line basic cards', () => {
   testS('Question::Answer', {
     questionOffset: 0,
     question: 'Question',
-    answerOffset: 0,
+    answerOffset: 10,
     answer: 'Answer',
     isReverse: false,
     metadata: undefined,

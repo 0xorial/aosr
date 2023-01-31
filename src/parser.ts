@@ -1,37 +1,53 @@
 import { ParseError, ParseResult } from './parse-result';
 import { RepeatItem } from './model';
 
-// function replaceAll(str: string, match: string, replacement: string) {
-//   return str.split(match).join(replacement);
-// }
-
-type LineWithPos = {
+export type LineWithPos = {
   content: string;
   // number of characters before the first character of this line
   startOffset: number;
 };
 
-function breakIntoLines(text: string): LineWithPos[] {
+export function breakIntoLines(text: string): LineWithPos[] {
   const r: LineWithPos[] = [];
   let i = -1;
 
+  let newLineString = '';
+
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    const lineStart = i;
-    i = text.indexOf('\r', i);
-    if (i < 0) {
-      if (text.length > 0 && r.length === 0) {
-        return [{ content: text, startOffset: 0 }];
+    if (i > text.length - 1) {
+      break;
+    }
+    if (newLineString === '') {
+      if (text[i] === '\r') {
+        r.push({ content: text.substring(0, i), startOffset: 0 });
+        if (text[i + 1] === '\n') {
+          newLineString = '\r\n';
+        } else {
+          newLineString = '\r';
+        }
+      } else if (text[i] === '\n') {
+        r.push({ content: text.substring(0, i), startOffset: 0 });
+        newLineString = '\n';
+      } else {
+        i++;
       }
-      return r;
-    }
+    } else {
+      const lineStart = i + newLineString.length;
+      i = text.indexOf(newLineString, lineStart);
+      if (i < 0) {
+        r.push({ content: text.substring(lineStart), startOffset: lineStart });
+        break;
+      }
 
-    if (text[i + 1] === '\n') {
-      i++;
+      r.push({ content: text.substring(lineStart, i), startOffset: lineStart });
     }
-
-    r.push({ content: text.substring(lineStart, i), startOffset: lineStart });
   }
+
+  if (r.length === 0 && text.length !== 0) {
+    return [{ content: text, startOffset: 0 }];
+  }
+
   return r;
 }
 
@@ -56,28 +72,34 @@ export function reversePair(i: Omit<RepeatItem, 'isReverse'>): [RepeatItem, Repe
   ];
 }
 
+function stringContains(t: string, s: string) {
+  return t.indexOf(s) >= 0;
+}
+
 export function parseDecks2(text: string, tagPrefix: string): ParseResult {
   const cards: RepeatItem[] = [];
   const errors: ParseError[] = [];
   const lines = breakIntoLines(text);
-  if (lines[0].content.trim().startsWith(`#${tagPrefix}`)) {
+  if (!lines[0].content.trim().startsWith(`#${tagPrefix}`)) {
     return { decks: [], errors: [] };
   }
+
+  lines.splice(0, 1);
 
   let state: 'free-text' | 'multiline-card-start' | 'multiline-card-end' = 'free-text';
   let isReverseMultiline = false;
   let firstPartMultilineContent = [];
   let secondPartMultilineContent = [];
-  let comment: string | null = null;
+  let comment: string | undefined = undefined;
   for (const line of lines) {
     if (state === 'free-text') {
-      const hasDoubleSplit = line.content.contains('::');
-      const hasTripleSplit = line.content.contains(':::');
+      const hasDoubleSplit = stringContains(line.content, '::');
+      const hasTripleSplit = stringContains(line.content, ':::');
       const isComment = line.content.startsWith('%%');
-      const separatorOffset = line.content.indexOf(':::');
       if (isComment) {
         comment = line.content;
       } else if (hasTripleSplit) {
+        const separatorOffset = line.content.indexOf(':::');
         const parts = line.content.split(':::');
         if (parts.length !== 2) {
           errors.push({
@@ -90,16 +112,16 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
             ...reversePair({
               questionOffset: line.startOffset,
               question: parts[0],
-              answerOffset: separatorOffset + 3,
+              answerOffset: line.startOffset + separatorOffset + 3,
               answer: parts[1],
               position: { start: line.startOffset, end: line.startOffset + line.content.length },
-              metadata: comment ?? '',
+              metadata: comment,
             })
           );
-          comment = null;
+          comment = undefined;
         }
       } else if (hasDoubleSplit) {
-        const parts = line.content.split(':::');
+        const parts = line.content.split('::');
         if (parts.length !== 2) {
           errors.push({
             start: line.startOffset,
@@ -107,16 +129,17 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
             message: 'Multiple separators found in the line',
           });
         } else {
+          const separatorOffset = line.content.indexOf('::');
           cards.push({
             questionOffset: line.startOffset,
             question: parts[0],
-            answerOffset: separatorOffset + 3,
+            answerOffset: line.startOffset + separatorOffset + 2,
             answer: parts[1],
             position: { start: line.startOffset, end: line.startOffset + line.content.length },
-            metadata: comment ?? '',
+            metadata: comment,
             isReverse: false,
           });
-          comment = null;
+          comment = undefined;
         }
       } else if (line.content === '??' || line.content === '?') {
         errors.push({
@@ -147,7 +170,7 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
           position: { start: firstPartMultilineContent[0].startOffset, end: last.startOffset + last.content.length },
           question,
           answer,
-          metadata: comment ?? '',
+          metadata: comment,
           isReverse: false,
           questionOffset: firstPartMultilineContent[0].startOffset,
           answerOffset: secondPartMultilineContent[0].startOffset,
@@ -156,7 +179,7 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
         if (isReverseMultiline) {
           cards.push(reverseCard(card));
         }
-        comment = null;
+        comment = undefined;
         firstPartMultilineContent = [];
         secondPartMultilineContent = [];
       } else {
@@ -165,5 +188,9 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
     }
   }
 
-  return { decks: cards, errors };
+  if (errors.length > 0) {
+    return { decks: cards, errors };
+  }
+
+  return { decks: cards };
 }
