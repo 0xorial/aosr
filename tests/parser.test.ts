@@ -117,6 +117,16 @@ test('Test parsing of single line basic cards', () => {
     position: pos(0, 16),
   });
 
+  testS('Question::Answer\n%%cc', {
+    questionOffset: 0,
+    question: 'Question',
+    answerOffset: 10,
+    answer: 'Answer',
+    isReverse: false,
+    metadata: '%%cc',
+    position: pos(0, 16),
+  });
+
   testS('Question::Answer <!--SR:!2021-08-11,4,270-->', {
     questionOffset: 0,
     question: 'Question',
@@ -126,6 +136,17 @@ test('Test parsing of single line basic cards', () => {
     metadata: '<!--SR:!2021-08-11,4,270-->',
     position: pos(0, 17),
   });
+
+  testS('Question::Answer %%cc', {
+    questionOffset: 0,
+    question: 'Question',
+    answerOffset: 10,
+    answer: 'Answer ',
+    isReverse: false,
+    metadata: '%%cc',
+    position: pos(0, 17),
+  });
+
   testS('Some text before\nQuestion ::Answer', {
     questionOffset: 17,
     question: 'Question ',
@@ -329,6 +350,7 @@ test('Test parsing of multi line reversed cards', () => {
     ]
   );
 });
+
 //
 // test('Test parsing of cloze cards', () => {
 //   // ==highlights==
