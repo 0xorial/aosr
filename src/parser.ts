@@ -175,7 +175,7 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
         if (text !== '') {
           secondPartMultilineContent.push({ content: text, startOffset: line.startOffset });
         }
-        x(metadata);
+        addPendingMultilineCard(metadata);
         firstPartMultilineContent = [];
         secondPartMultilineContent = [];
         state = 'free-text';
@@ -185,7 +185,7 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
     }
   }
 
-  function x(line?: string) {
+  function addPendingMultilineCard(line?: string) {
     const last = secondPartMultilineContent[secondPartMultilineContent.length - 1];
     const question = firstPartMultilineContent.map((x) => x.content).join('\n');
     const answer = secondPartMultilineContent.map((x) => x.content).join('\n');
@@ -205,7 +205,7 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
   }
 
   if (state === 'multiline-card-end') {
-    x();
+    addPendingMultilineCard();
   }
 
   cards.push(...cardsWaitingForMetadata);
