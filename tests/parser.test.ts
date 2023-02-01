@@ -18,8 +18,9 @@ function testS(text: string, result: RepeatItem) {
 }
 
 function testA(text: string, result: RepeatItem[]) {
-  const r = parseDecks2('#flashcards\n' + text, 'flashcards');
-  expect(r).toEqual({ decks: result });
+  const prefix = '#flashcards\n';
+  const r = parseDecks2(prefix + text, 'flashcards');
+  expect(r).toEqual({ decks: result.map((r) => offsetRepeatItem(r, prefix.length)) });
 }
 
 function pos(from: number, to: number): Position {
@@ -116,14 +117,14 @@ test('Test parsing of single line basic cards', () => {
     position: pos(0, 16),
   });
 
-  testS('Question::Answer <!--SR:2021-08-11,4,270-->', {
+  testS('Question::Answer <!--SR:!2021-08-11,4,270-->', {
     questionOffset: 0,
     question: 'Question',
     answerOffset: 10,
-    answer: 'Answer',
+    answer: 'Answer ',
     isReverse: false,
     metadata: '<!--SR:!2021-08-11,4,270-->',
-    position: pos(0, 16),
+    position: pos(0, 17),
   });
   testS('Some text before\nQuestion ::Answer', {
     questionOffset: 17,
@@ -131,24 +132,24 @@ test('Test parsing of single line basic cards', () => {
     answerOffset: 28,
     answer: 'Answer',
     isReverse: false,
-    position: pos(0, 16),
+    position: pos(17, 34),
   });
   testA('#Title\n\nQ1::A1\nQ2:: A2', [
     {
       questionOffset: 8,
-      question: 'Q1 ',
+      question: 'Q1',
       answerOffset: 12,
       answer: 'A1',
       isReverse: false,
-      position: pos(0, 16),
+      position: pos(8, 14),
     },
     {
       questionOffset: 15,
-      question: 'Q1 ',
+      question: 'Q2',
       answerOffset: 19,
       answer: ' A2',
       isReverse: false,
-      position: pos(0, 16),
+      position: pos(15, 22),
     },
   ]);
 });
@@ -159,9 +160,9 @@ test('Test parsing of single line reversed cards', () => {
     reversePair({
       questionOffset: 0,
       question: 'Question',
-      answerOffset: 10,
+      answerOffset: 11,
       answer: 'Answer',
-      position: pos(0, 16),
+      position: pos(0, 17),
     })
   );
 
@@ -170,9 +171,9 @@ test('Test parsing of single line reversed cards', () => {
     reversePair({
       questionOffset: 17,
       question: 'Question ',
-      answerOffset: 27,
+      answerOffset: 29,
       answer: 'Answer',
-      position: pos(0, 16),
+      position: pos(17, 35),
     })
   );
 
@@ -188,7 +189,7 @@ test('Test parsing of single line reversed cards', () => {
       questionOffset: 16,
       question: 'Q2',
       answerOffset: 21,
-      answer: 'A2',
+      answer: ' A2',
       position: pos(16, 24),
     }),
   ]);

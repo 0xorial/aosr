@@ -76,6 +76,22 @@ function stringContains(t: string, s: string) {
   return t.indexOf(s) >= 0;
 }
 
+function separateMetadata(l: string): { text: string; metadata?: string } {
+  const srStart = l.indexOf('<!--SR');
+  const endsWithSr = l.endsWith('-->');
+  const commentStart = l.indexOf('%%');
+
+  if (srStart >= 0 && endsWithSr) {
+    return { text: l.substring(0, srStart), metadata: l.substring(srStart) };
+  }
+
+  if (commentStart >= 0) {
+    return { text: l.substring(0, commentStart), metadata: l.substring(commentStart) };
+  }
+
+  return { text: l };
+}
+
 export function parseDecks2(text: string, tagPrefix: string): ParseResult {
   const cards: RepeatItem[] = [];
   const errors: ParseError[] = [];
@@ -86,60 +102,67 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
 
   lines.splice(0, 1);
 
-  let state: 'free-text' | 'multiline-card-start' | 'multiline-card-end' = 'free-text';
+  let state: 'free-text' | 'multiline-card-end' = 'free-text';
   let isReverseMultiline = false;
   let firstPartMultilineContent = [];
   let secondPartMultilineContent = [];
-  let comment: string | undefined = undefined;
+  let cardsWaitingForMetadata = [];
   for (const line of lines) {
+    const isSRComment = line.content.startsWith('<!--SR') && line.content.endsWith('-->');
+    const isComment = line.content.startsWith('%%');
+    if (cardsWaitingForMetadata.length > 0) {
+      if (isSRComment || isComment) {
+        for (const newCard of cardsWaitingForMetadata) {
+          cards.push({ ...newCard, metadata: newCard.metadata ?? line.content });
+        }
+        cardsWaitingForMetadata = [];
+        continue;
+      }
+    }
     if (state === 'free-text') {
-      const hasDoubleSplit = stringContains(line.content, '::');
-      const hasTripleSplit = stringContains(line.content, ':::');
-      const isComment = line.content.startsWith('%%');
-      if (isComment) {
-        comment = line.content;
-      } else if (hasTripleSplit) {
-        const separatorOffset = line.content.indexOf(':::');
-        const parts = line.content.split(':::');
+      const { text, metadata } = separateMetadata(line.content);
+      const hasDoubleSplit = stringContains(text, '::');
+      const hasTripleSplit = stringContains(text, ':::');
+      if (hasTripleSplit) {
+        const separatorOffset = text.indexOf(':::');
+        const parts = text.split(':::');
         if (parts.length !== 2) {
           errors.push({
             start: line.startOffset,
-            end: line.startOffset + line.content.length,
+            end: line.startOffset + text.length,
             message: 'Multiple separators found in the line',
           });
         } else {
-          cards.push(
+          cardsWaitingForMetadata.push(
             ...reversePair({
               questionOffset: line.startOffset,
               question: parts[0],
               answerOffset: line.startOffset + separatorOffset + 3,
               answer: parts[1],
-              position: { start: line.startOffset, end: line.startOffset + line.content.length },
-              metadata: comment,
+              position: { start: line.startOffset, end: line.startOffset + text.length },
+              metadata,
             })
           );
-          comment = undefined;
         }
       } else if (hasDoubleSplit) {
-        const parts = line.content.split('::');
+        const parts = text.split('::');
         if (parts.length !== 2) {
           errors.push({
             start: line.startOffset,
-            end: line.startOffset + line.content.length,
+            end: line.startOffset + text.length,
             message: 'Multiple separators found in the line',
           });
         } else {
-          const separatorOffset = line.content.indexOf('::');
-          cards.push({
+          const separatorOffset = text.indexOf('::');
+          cardsWaitingForMetadata.push({
             questionOffset: line.startOffset,
             question: parts[0],
             answerOffset: line.startOffset + separatorOffset + 2,
             answer: parts[1],
-            position: { start: line.startOffset, end: line.startOffset + line.content.length },
-            metadata: comment,
+            position: { start: line.startOffset, end: line.startOffset + text.length },
+            metadata,
             isReverse: false,
           });
-          comment = undefined;
         }
       } else if (line.content === '??' || line.content === '?') {
         errors.push({
@@ -147,21 +170,17 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
           end: line.startOffset + line.content.length,
           message: 'Missing question',
         });
-      } else {
-        state = 'multiline-card-start';
-        firstPartMultilineContent.push(line);
-      }
-    } else if (state === 'multiline-card-start') {
-      if (line.content === '?') {
+      } else if (text === '?') {
         state = 'multiline-card-end';
         isReverseMultiline = true;
-      } else if (line.content === '??') {
+      } else if (text === '??') {
         isReverseMultiline = false;
-      } else {
+      }
+      {
         firstPartMultilineContent.push(line);
       }
     } else if (state === 'multiline-card-end') {
-      if (line.content === '') {
+      if (line.content === '' || isSRComment) {
         state = 'multiline-card-end';
         const last = secondPartMultilineContent[secondPartMultilineContent.length - 1];
         const question = firstPartMultilineContent.map((x) => x.content).join('\n');
@@ -170,7 +189,7 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
           position: { start: firstPartMultilineContent[0].startOffset, end: last.startOffset + last.content.length },
           question,
           answer,
-          metadata: comment,
+          metadata: line.content,
           isReverse: false,
           questionOffset: firstPartMultilineContent[0].startOffset,
           answerOffset: secondPartMultilineContent[0].startOffset,
@@ -179,7 +198,6 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
         if (isReverseMultiline) {
           cards.push(reverseCard(card));
         }
-        comment = undefined;
         firstPartMultilineContent = [];
         secondPartMultilineContent = [];
       } else {
@@ -187,6 +205,8 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
       }
     }
   }
+
+  cards.push(...cardsWaitingForMetadata);
 
   if (errors.length > 0) {
     return { decks: cards, errors };
