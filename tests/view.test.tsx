@@ -73,7 +73,7 @@ test('should load items', () => {
     {
       basename: '/test',
       extension: '.md',
-      content: 'Q::A',
+      content: '#flashcards\nQ::A',
     },
   ]);
   const wrapper = render(<TheApp obsidian={o} />);

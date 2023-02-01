@@ -1,6 +1,6 @@
 import { FileType, ObsidianAdapterContextType, Position } from './obsidian-context';
-import { parseDecks2 } from './parser';
-import { emptyParseResult, mergeParseResults, ParseResult } from './parse-result';
+import { parseDecks2, tryParseMetadata } from './parser';
+import { emptyParseResult, ParseError, ParseResult } from './parse-result';
 
 export type ParsedRepeatItem = {
   question: string;
@@ -12,27 +12,51 @@ export type ParsedRepeatItem = {
   isReverse: boolean;
 };
 
+export type RepeatItem = {
+  file: FileType;
+  metadata: ItemMetadata;
+  parsed: ParsedRepeatItem;
+};
+
 export type ItemMetadata = {
   answers: { time: Date; answer: 'show-again' | 'remembered-easy' | 'remembered-hard' }[];
 };
 
 export type Deck = {
-  repeatItem: ParsedRepeatItem;
+  items: RepeatItem[];
   name: string;
+  pendingReview: number;
 };
 
 export type ParseOptions = {
   deckTagPrefix: string;
 };
 
-export async function loadDecks(obsidian: ObsidianAdapterContextType, o: ParseOptions): Promise<ParseResult> {
+export type LoadingError = ParseError & { file: FileType };
+
+export async function loadDecks(
+  obsidian: ObsidianAdapterContextType,
+  o: ParseOptions
+): Promise<{ items: RepeatItem[]; errors: LoadingError[] }> {
   const notes = obsidian.getMarkdownFiles();
-  let result = emptyParseResult;
+  const r: RepeatItem[] = [];
+  const errors: LoadingError[] = [];
   for (const note of notes) {
     const fileDecks = await loadDecksFromFile(note, o);
-    result = mergeParseResults(result, fileDecks);
+    for (const deck of fileDecks.decks) {
+      r.push({
+        parsed: deck,
+        file: note,
+        metadata: (deck.metadata ? tryParseMetadata(deck.metadata) : undefined) ?? { answers: [] },
+      });
+    }
+    if (fileDecks.errors) {
+      for (const error of fileDecks.errors) {
+        errors.push({ ...error, file: note });
+      }
+    }
   }
-  return result;
+  return { items: r, errors };
 }
 
 async function loadDecksFromFile(note: FileType, o: ParseOptions): Promise<ParseResult> {
