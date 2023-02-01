@@ -19,7 +19,14 @@ function mapFile(file: TFile): FileType {
     basename: file.basename,
     extension: file.extension,
     readFile: () => app.vault.read(file),
+    writeFile: (x: string) => app.vault.modify(file, x),
     getTags: () =>
-      (app.metadataCache.getFileCache(file)?.tags ?? []).map((x) => ({ name: x.tag, position: x.position })),
+      (app.metadataCache.getFileCache(file)?.tags ?? []).map((x) => ({
+        name: x.tag,
+        position: {
+          start: x.position.start.offset,
+          end: x.position.end.offset,
+        },
+      })),
   };
 }

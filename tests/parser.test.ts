@@ -1,8 +1,8 @@
 import { breakIntoLines, LineWithPos, parseDecks2, reversePair } from '../src/parser';
 import { Position } from '../src/obsidian-context';
-import { RepeatItem } from '../src/model';
+import { ParsedRepeatItem } from '../src/model';
 
-function offsetRepeatItem(result: RepeatItem, offset: number): RepeatItem {
+function offsetRepeatItem(result: ParsedRepeatItem, offset: number): ParsedRepeatItem {
   return {
     ...result,
     answerOffset: result.answerOffset + offset,
@@ -11,13 +11,13 @@ function offsetRepeatItem(result: RepeatItem, offset: number): RepeatItem {
   };
 }
 
-function testS(text: string, result: RepeatItem) {
+function testS(text: string, result: ParsedRepeatItem) {
   const prefix = '#flashcards\n';
   const r = parseDecks2(prefix + text, 'flashcards');
   expect(r).toEqual({ decks: [offsetRepeatItem(result, prefix.length)] });
 }
 
-function testA(text: string, result: RepeatItem[]) {
+function testA(text: string, result: ParsedRepeatItem[]) {
   const prefix = '#flashcards\n';
   const r = parseDecks2(prefix + text, 'flashcards');
   expect(r).toEqual({ decks: result.map((r) => offsetRepeatItem(r, prefix.length)) });
@@ -216,13 +216,13 @@ test('Test parsing of single line reversed cards', () => {
   ]);
 });
 
-function testMl(text: string, item: RepeatItem) {
+function testMl(text: string, item: ParsedRepeatItem) {
   const prefix = '#flashcards\n';
   const r = parseDecks2(prefix + text, 'flashcards');
   expect(r).toEqual({ decks: [offsetRepeatItem(item, prefix.length)] });
 }
 
-function testMlA(text: string, item: RepeatItem[]) {
+function testMlA(text: string, item: ParsedRepeatItem[]) {
   const prefix = '#flashcards\n';
   const r = parseDecks2(prefix + text, 'flashcards');
   expect(r).toEqual({ decks: item.map((x) => offsetRepeatItem(x, prefix.length)) });
@@ -350,200 +350,3 @@ test('Test parsing of multi line reversed cards', () => {
     ]
   );
 });
-
-//
-// test('Test parsing of cloze cards', () => {
-//   // ==highlights==
-//   test('cloze ==deletion== test')
-// ).
-//   toEqual([[CardType.Cloze, 'cloze ==deletion== test', 0]]);
-//   test('cloze ==deletion== test\n<!--SR:2021-08-11,4,270-->')
-// ).
-//   toEqual([
-//     [CardType.Cloze, 'cloze ==deletion== test\n<!--SR:2021-08-11,4,270-->', 0],
-//   ]);
-//   test('cloze ==deletion== test <!--SR:2021-08-11,4,270-->')
-// ).
-//   toEqual([
-//     [CardType.Cloze, 'cloze ==deletion== test <!--SR:2021-08-11,4,270-->', 0],
-//   ]);
-//   test('==this== is a ==deletion==\n')
-// ).
-//   toEqual([[CardType.Cloze, '==this== is a ==deletion==', 0]]);
-//   expect(
-//     parse(
-//       'some text before\n\na deletion on\nsuch ==wow==\n\n' +
-//       'many text\nsuch surprise ==wow== more ==text==\nsome text after\n\nHmm',
-//       ...defaultArgs
-//     )
-//   ).toEqual([
-//     [CardType.Cloze, 'a deletion on\nsuch ==wow==', 3],
-//     [CardType.Cloze, 'many text\nsuch surprise ==wow== more ==text==\nsome text after', 6],
-//   ]);
-//   test('srdf ==')
-// ).
-//   toEqual([]);
-//   test('lorem ipsum ==p\ndolor won==')
-// ).
-//   toEqual([]);
-//   test('lorem ipsum ==dolor won=')
-// ).
-//   toEqual([]);
-//   // ==highlights== turned off
-//   test('cloze ==deletion== test', false, true, false, '::', ':::', '?', '??')
-// ).
-//   toEqual([]);
-//
-//   // **bolded**
-//   test('cloze **deletion** test')
-// ).
-//   toEqual([[CardType.Cloze, 'cloze **deletion** test', 0]]);
-//   test('cloze **deletion** test\n<!--SR:2021-08-11,4,270-->')
-// ).
-//   toEqual([
-//     [CardType.Cloze, 'cloze **deletion** test\n<!--SR:2021-08-11,4,270-->', 0],
-//   ]);
-//   test('cloze **deletion** test <!--SR:2021-08-11,4,270-->')
-// ).
-//   toEqual([
-//     [CardType.Cloze, 'cloze **deletion** test <!--SR:2021-08-11,4,270-->', 0],
-//   ]);
-//   test('**this** is a **deletion**\n')
-// ).
-//   toEqual([[CardType.Cloze, '**this** is a **deletion**', 0]]);
-//   expect(
-//     parse(
-//       'some text before\n\na deletion on\nsuch **wow**\n\n' +
-//       'many text\nsuch surprise **wow** more **text**\nsome text after\n\nHmm',
-//       ...defaultArgs
-//     )
-//   ).toEqual([
-//     [CardType.Cloze, 'a deletion on\nsuch **wow**', 3],
-//     [CardType.Cloze, 'many text\nsuch surprise **wow** more **text**\nsome text after', 6],
-//   ]);
-//   test('srdf **')
-// ).
-//   toEqual([]);
-//   test('lorem ipsum **p\ndolor won**')
-// ).
-//   toEqual([]);
-//   test('lorem ipsum **dolor won*')
-// ).
-//   toEqual([]);
-//   // **bolded** turned off
-//   test('cloze **deletion** test', true, false, false, '::', ':::', '?', '??')
-// ).
-//   toEqual([]);
-//
-//   // both
-//   test('cloze **deletion** test ==another deletion==!')
-// ).
-//   toEqual([
-//     [CardType.Cloze, 'cloze **deletion** test ==another deletion==!', 0],
-//   ]);
-// });
-//
-// test('Test parsing of a mix of card types', () => {
-//   expect(
-//     parse(
-//       '# Lorem Ipsum\n\nLorem ipsum dolor ==sit amet==, consectetur ==adipiscing== elit.\n' +
-//       'Duis magna arcu, eleifend rhoncus ==euismod non,==\nlaoreet vitae enim.\n\n' +
-//       'Fusce placerat::velit in pharetra gravida\n\n' +
-//       'Donec dapibus ullamcorper aliquam.\n??\nDonec dapibus ullamcorper aliquam.\n<!--SR:2021-08-11,4,270-->',
-//       ...defaultArgs
-//     )
-//   ).toEqual([
-//     [
-//       CardType.Cloze,
-//       'Lorem ipsum dolor ==sit amet==, consectetur ==adipiscing== elit.\n' +
-//       'Duis magna arcu, eleifend rhoncus ==euismod non,==\n' +
-//       'laoreet vitae enim.',
-//       2,
-//     ],
-//     [CardType.SingleLineBasic, 'Fusce placerat::velit in pharetra gravida', 6],
-//     [
-//       CardType.MultiLineReversed,
-//       'Donec dapibus ullamcorper aliquam.\n??\nDonec dapibus ullamcorper aliquam.\n<!--SR:2021-08-11,4,270-->',
-//       9,
-//     ],
-//   ]);
-// });
-//
-// test('Test codeblocks', () => {
-//   // no blank lines
-//   expect(
-//     parse(
-//       'How do you ... Python?\n?\n' + "```\nprint('Hello World!')\nprint('Howdy?')\nlambda x: x[0]\n```",
-//       ...defaultArgs
-//     )
-//   ).toEqual([
-//     [
-//       CardType.MultiLineBasic,
-//       'How do you ... Python?\n?\n' + "```\nprint('Hello World!')\nprint('Howdy?')\nlambda x: x[0]\n```",
-//       1,
-//     ],
-//   ]);
-//
-//   // with blank lines
-//   expect(
-//     parse(
-//       'How do you ... Python?\n?\n' + "```\nprint('Hello World!')\n\n\nprint('Howdy?')\n\nlambda x: x[0]\n```",
-//       ...defaultArgs
-//     )
-//   ).toEqual([
-//     [
-//       CardType.MultiLineBasic,
-//       'How do you ... Python?\n?\n' + "```\nprint('Hello World!')\n\n\nprint('Howdy?')\n\nlambda x: x[0]\n```",
-//       1,
-//     ],
-//   ]);
-//
-//   // general Markdown syntax
-//   expect(
-//     parse(
-//       'Nested Markdown?\n?\n' +
-//       '````ad-note\n\n' +
-//       '```git\n' +
-//       "+ print('hello')\n" +
-//       "- print('world')\n" +
-//       '```\n\n' +
-//       '~~~python\n' +
-//       "print('hello world')\n" +
-//       '~~~\n' +
-//       '````',
-//       ...defaultArgs
-//     )
-//   ).toEqual([
-//     [
-//       CardType.MultiLineBasic,
-//       'Nested Markdown?\n?\n' +
-//       '````ad-note\n\n' +
-//       '```git\n' +
-//       "+ print('hello')\n" +
-//       "- print('world')\n" +
-//       '```\n\n' +
-//       '~~~python\n' +
-//       "print('hello world')\n" +
-//       '~~~\n' +
-//       '````',
-//       1,
-//     ],
-//   ]);
-// });
-//
-// test('Test not parsing cards in HTML comments', () => {
-//   test('<!--\nQuestion\n?\nAnswer <!--SR:!2021-08-11,4,270-->\n-->')
-// ).
-//   toEqual([]);
-//   test('<!--\nQuestion\n?\nAnswer <!--SR:!2021-08-11,4,270-->\n\n<!--cloze ==deletion== test-->-->')
-// ).
-//   toEqual(
-//     []
-//   );
-//   test('<!--cloze ==deletion== test-->')
-// ).
-//   toEqual([]);
-//   test('<!--cloze **deletion** test-->')
-// ).
-//   toEqual([]);
-// });

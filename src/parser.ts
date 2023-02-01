@@ -1,5 +1,5 @@
 import { ParseError, ParseResult } from './parse-result';
-import { RepeatItem } from './model';
+import { ItemMetadata, ParsedRepeatItem } from './model';
 
 export type LineWithPos = {
   content: string;
@@ -51,7 +51,7 @@ export function breakIntoLines(text: string): LineWithPos[] {
   return r;
 }
 
-export function reverseCard(i: RepeatItem): RepeatItem {
+export function reverseCard(i: ParsedRepeatItem): ParsedRepeatItem {
   return {
     ...i,
     answer: i.question,
@@ -62,7 +62,7 @@ export function reverseCard(i: RepeatItem): RepeatItem {
   };
 }
 
-export function reversePair(i: Omit<RepeatItem, 'isReverse'>): [RepeatItem, RepeatItem] {
+export function reversePair(i: Omit<ParsedRepeatItem, 'isReverse'>): [ParsedRepeatItem, ParsedRepeatItem] {
   const c = { ...i, isReverse: false };
   return [
     c,
@@ -93,7 +93,7 @@ function separateMetadata(l: string): { text: string; metadata?: string } {
 }
 
 export function parseDecks2(text: string, tagPrefix: string): ParseResult {
-  const cards: RepeatItem[] = [];
+  const cards: ParsedRepeatItem[] = [];
   const errors: ParseError[] = [];
   const lines = breakIntoLines(text);
   if (!lines[0].content.trim().startsWith(`#${tagPrefix}`)) {
@@ -189,7 +189,7 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
     const last = secondPartMultilineContent[secondPartMultilineContent.length - 1];
     const question = firstPartMultilineContent.map((x) => x.content).join('\n');
     const answer = secondPartMultilineContent.map((x) => x.content).join('\n');
-    const card: RepeatItem = {
+    const card: ParsedRepeatItem = {
       position: { start: firstPartMultilineContent[0].startOffset, end: last.startOffset + last.content.length },
       question,
       answer,
@@ -215,4 +215,51 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
   }
 
   return { decks: cards };
+}
+
+export function tryParseMetadata(s: string): ItemMetadata | null {
+  if (s.startsWith('<!--SR')) {
+    return null;
+  }
+  if (s.startsWith('%%')) {
+    const payload = s.substring(2);
+    const parts = payload.split(',');
+    if (parts[0] !== '1') {
+      throw new Error();
+    }
+    parts.splice(0, 1);
+    const answers = parts.map((x) => {
+      const ps = x.split(':');
+      if (ps.length !== 2) throw new Error();
+      return { time: new Date(parseInt(ps[0])), answer: parseLearnCode(parseInt(ps[1])) };
+    });
+    return { answers };
+  }
+
+  return null;
+}
+
+type LearnCode = ItemMetadata['answers'][number]['answer'];
+type LearnCodeValue = 1 | 2 | 3;
+export function getLearnCode(l: LearnCode): LearnCodeValue {
+  if (l === 'show-again') return 1;
+  if (l === 'remembered-easy') return 2;
+  if (l === 'remembered-hard') return 3;
+  return assertNever(l);
+}
+
+export function parseLearnCode(l: number): LearnCode {
+  if (l === 1) return 'show-again';
+  if (l === 2) return 'remembered-easy';
+  if (l === 3) return 'remembered-hard';
+  throw new Error(l + ' is not a valid learn code.');
+}
+
+export function stringifyMetadata(m: ItemMetadata) {
+  const answers = m.answers.map((x) => `${x.time.getTime()}:${getLearnCode(x.answer)}`).join(',');
+  return `1,${answers}`;
+}
+
+export function assertNever(x: never): never {
+  throw new Error('Unexpected object: ' + x);
 }

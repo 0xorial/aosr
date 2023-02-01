@@ -1,10 +1,10 @@
-import { RepeatItem } from './model';
+import { ParsedRepeatItem } from './model';
 
 export type ParseError = { start: number; end: number; message: string };
 
 export type ParseResult = {
   errors?: Array<ParseError>;
-  decks: RepeatItem[];
+  decks: ParsedRepeatItem[];
 };
 
 export const emptyParseResult: ParseResult = {

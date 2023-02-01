@@ -14,6 +14,7 @@ export type FileType = {
   extension: string;
   basename: string;
   readFile: () => Promise<string>;
+  writeFile: (text: string) => Promise<void>;
   getTags(): Tag[];
 };
 

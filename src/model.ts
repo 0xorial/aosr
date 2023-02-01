@@ -2,7 +2,7 @@ import { FileType, ObsidianAdapterContextType, Position } from './obsidian-conte
 import { parseDecks2 } from './parser';
 import { emptyParseResult, mergeParseResults, ParseResult } from './parse-result';
 
-export type RepeatItem = {
+export type ParsedRepeatItem = {
   question: string;
   questionOffset: number;
   answer: string;
@@ -10,11 +10,14 @@ export type RepeatItem = {
   position: Position;
   metadata?: string;
   isReverse: boolean;
-  clozePosition?: Position;
+};
+
+export type ItemMetadata = {
+  answers: { time: Date; answer: 'show-again' | 'remembered-easy' | 'remembered-hard' }[];
 };
 
 export type Deck = {
-  repeatItem: RepeatItem;
+  repeatItem: ParsedRepeatItem;
   name: string;
 };
 
