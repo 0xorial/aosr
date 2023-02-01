@@ -107,19 +107,17 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
   let secondPartMultilineContent: LineWithPos[] = [];
   let cardsWaitingForMetadata = [];
   for (const line of lines) {
-    const isSRComment = line.content.startsWith('<!--SR') && line.content.endsWith('-->');
-    const isComment = line.content.startsWith('%%');
+    const { text, metadata } = separateMetadata(line.content);
     if (cardsWaitingForMetadata.length > 0) {
-      if (isSRComment || isComment) {
+      if (metadata) {
         for (const newCard of cardsWaitingForMetadata) {
-          cards.push({ ...newCard, metadata: newCard.metadata ?? line.content });
+          cards.push({ ...newCard, metadata: newCard.metadata ?? metadata });
         }
         cardsWaitingForMetadata = [];
         continue;
       }
     }
     if (state === 'free-text') {
-      const { text, metadata } = separateMetadata(line.content);
       const hasDoubleSplit = stringContains(text, '::');
       const hasTripleSplit = stringContains(text, ':::');
       if (hasTripleSplit) {
@@ -173,7 +171,6 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
         firstPartMultilineContent.push(line);
       }
     } else if (state === 'multiline-card-end') {
-      const { text, metadata } = separateMetadata(line.content);
       if (line.content === '' || metadata) {
         if (text !== '') {
           secondPartMultilineContent.push({ content: text, startOffset: line.startOffset });
