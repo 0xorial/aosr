@@ -194,60 +194,141 @@ test('Test parsing of single line reversed cards', () => {
     }),
   ]);
 });
-//
-// test('Test parsing of multi line basic cards', () => {
-//   test('Question\n?\nAnswer')
-// ).
-//   toEqual([[CardType.MultiLineBasic, 'Question\n?\nAnswer', 1]]);
-//   test('Question\n?\nAnswer <!--SR:!2021-08-11,4,270-->')
-// ).
-//   toEqual([
-//     [CardType.MultiLineBasic, 'Question\n?\nAnswer <!--SR:!2021-08-11,4,270-->', 1],
-//   ]);
-//   test('Question\n?\nAnswer\n<!--SR:2021-08-11,4,270-->')
-// ).
-//   toEqual([
-//     [CardType.MultiLineBasic, 'Question\n?\nAnswer\n<!--SR:2021-08-11,4,270-->', 1],
-//   ]);
-//   test('Some text before\nQuestion\n?\nAnswer')
-// ).
-//   toEqual([
-//     [CardType.MultiLineBasic, 'Some text before\nQuestion\n?\nAnswer', 2],
-//   ]);
-//   test('Question\n?\nAnswer\nSome text after!')
-// ).
-//   toEqual([
-//     [CardType.MultiLineBasic, 'Question\n?\nAnswer\nSome text after!', 1],
-//   ]);
-//   test('#Title\n\nLine0\nQ1\n?\nA1\nAnswerExtra\n\nQ2\n?\nA2')
-// ).
-//   toEqual([
-//     [CardType.MultiLineBasic, 'Line0\nQ1\n?\nA1\nAnswerExtra', 4],
-//     [CardType.MultiLineBasic, 'Q2\n?\nA2', 9],
-//   ]);
-// });
-//
-// test('Test parsing of multi line reversed cards', () => {
-//   test('Question\n??\nAnswer')
-// ).
-//   toEqual([[CardType.MultiLineReversed, 'Question\n??\nAnswer', 1]]);
-//   test('Some text before\nQuestion\n??\nAnswer')
-// ).
-//   toEqual([
-//     [CardType.MultiLineReversed, 'Some text before\nQuestion\n??\nAnswer', 2],
-//   ]);
-//   test('Question\n??\nAnswer\nSome text after!')
-// ).
-//   toEqual([
-//     [CardType.MultiLineReversed, 'Question\n??\nAnswer\nSome text after!', 1],
-//   ]);
-//   test('#Title\n\nLine0\nQ1\n??\nA1\nAnswerExtra\n\nQ2\n??\nA2')
-// ).
-//   toEqual([
-//     [CardType.MultiLineReversed, 'Line0\nQ1\n??\nA1\nAnswerExtra', 4],
-//     [CardType.MultiLineReversed, 'Q2\n??\nA2', 9],
-//   ]);
-// });
+
+function testMl(text: string, item: RepeatItem) {
+  const prefix = '#flashcards\n';
+  const r = parseDecks2(prefix + text, 'flashcards');
+  expect(r).toEqual({ decks: [offsetRepeatItem(item, prefix.length)] });
+}
+
+function testMlA(text: string, item: RepeatItem[]) {
+  const prefix = '#flashcards\n';
+  const r = parseDecks2(prefix + text, 'flashcards');
+  expect(r).toEqual({ decks: item.map((x) => offsetRepeatItem(x, prefix.length)) });
+}
+
+test('Test parsing of multi line basic cards', () => {
+  testMl('Question\n?\nAnswer', {
+    questionOffset: 0,
+    question: 'Question',
+    answerOffset: 11,
+    answer: 'Answer',
+    position: pos(0, 17),
+    isReverse: false,
+  });
+
+  testMl('Question\n?\nAnswer <!--SR:!2021-08-11,4,270-->', {
+    questionOffset: 0,
+    question: 'Question',
+    answerOffset: 11,
+    answer: 'Answer ',
+    position: pos(0, 18),
+    isReverse: false,
+    metadata: '<!--SR:!2021-08-11,4,270-->',
+  });
+  testMl('Question\n?\nAnswer\n<!--SR:2021-08-11,4,270-->', {
+    questionOffset: 0,
+    question: 'Question',
+    answerOffset: 11,
+    answer: 'Answer',
+    position: pos(0, 17),
+    isReverse: false,
+    metadata: '<!--SR:2021-08-11,4,270-->',
+  });
+
+  testMl('Some text before\nQuestion\n?\nAnswer', {
+    questionOffset: 0,
+    question: 'Some text before\nQuestion',
+    answerOffset: 28,
+    answer: 'Answer',
+    position: pos(0, 34),
+    isReverse: false,
+  });
+
+  testMl('Question\n?\nAnswer\nSome text after!', {
+    questionOffset: 0,
+    question: 'Question',
+    answerOffset: 11,
+    answer: 'Answer\nSome text after!',
+    position: pos(0, 34),
+    isReverse: false,
+  });
+
+  testMlA('#Title\n\nLine0\nQ1\n?\nA1\nAnswerExtra\n\nQ2\n?\nA2', [
+    {
+      questionOffset: 0,
+      question: '#Title\n\nLine0\nQ1',
+      answerOffset: 19,
+      answer: 'A1\nAnswerExtra',
+      position: pos(0, 33),
+      isReverse: false,
+    },
+    {
+      questionOffset: 35,
+      question: 'Q2',
+      answerOffset: 40,
+      answer: 'A2',
+      position: pos(35, 42),
+      isReverse: false,
+    },
+  ]);
+});
+
+test('Test parsing of multi line reversed cards', () => {
+  testMlA(
+    'Question\n??\nAnswer',
+    reversePair({
+      questionOffset: 0,
+      question: 'Question',
+      answerOffset: 12,
+      answer: 'Answer',
+      position: pos(0, 18),
+    })
+  );
+
+  testMlA(
+    'Some text before\nQuestion\n??\nAnswer',
+    reversePair({
+      questionOffset: 0,
+      question: 'Some text before\nQuestion',
+      answerOffset: 29,
+      answer: 'Answer',
+      position: pos(0, 35),
+    })
+  );
+
+  testMlA(
+    'Question\n??\nAnswer\nSome text after!',
+    reversePair({
+      questionOffset: 0,
+      question: 'Question',
+      answerOffset: 12,
+      answer: 'Answer\nSome text after!',
+      position: pos(0, 35),
+    })
+  );
+
+  testMlA(
+    '#Title\n\nLine0\nQ1\n??\nA1\nAnswerExtra\n\nQ2\n??\nA2',
+
+    [
+      ...reversePair({
+        questionOffset: 0,
+        question: '#Title\n\nLine0\nQ1',
+        answerOffset: 20,
+        answer: 'A1\nAnswerExtra',
+        position: pos(0, 34),
+      }),
+      ...reversePair({
+        questionOffset: 36,
+        question: 'Q2',
+        answerOffset: 42,
+        answer: 'A2',
+        position: pos(36, 44),
+      }),
+    ]
+  );
+});
 //
 // test('Test parsing of cloze cards', () => {
 //   // ==highlights==

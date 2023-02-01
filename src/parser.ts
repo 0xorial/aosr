@@ -101,11 +101,10 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
   }
 
   lines.splice(0, 1);
-
   let state: 'free-text' | 'multiline-card-end' = 'free-text';
   let isReverseMultiline = false;
-  let firstPartMultilineContent = [];
-  let secondPartMultilineContent = [];
+  let firstPartMultilineContent: LineWithPos[] = [];
+  let secondPartMultilineContent: LineWithPos[] = [];
   let cardsWaitingForMetadata = [];
   for (const line of lines) {
     const isSRComment = line.content.startsWith('<!--SR') && line.content.endsWith('-->');
@@ -164,46 +163,52 @@ export function parseDecks2(text: string, tagPrefix: string): ParseResult {
             isReverse: false,
           });
         }
-      } else if (line.content === '??' || line.content === '?') {
-        errors.push({
-          start: line.startOffset,
-          end: line.startOffset + line.content.length,
-          message: 'Missing question',
-        });
       } else if (text === '?') {
         state = 'multiline-card-end';
-        isReverseMultiline = true;
-      } else if (text === '??') {
         isReverseMultiline = false;
-      }
-      {
+      } else if (text === '??') {
+        state = 'multiline-card-end';
+        isReverseMultiline = true;
+      } else {
         firstPartMultilineContent.push(line);
       }
     } else if (state === 'multiline-card-end') {
-      if (line.content === '' || isSRComment) {
-        state = 'multiline-card-end';
-        const last = secondPartMultilineContent[secondPartMultilineContent.length - 1];
-        const question = firstPartMultilineContent.map((x) => x.content).join('\n');
-        const answer = secondPartMultilineContent.map((x) => x.content).join('\n');
-        const card: RepeatItem = {
-          position: { start: firstPartMultilineContent[0].startOffset, end: last.startOffset + last.content.length },
-          question,
-          answer,
-          metadata: line.content,
-          isReverse: false,
-          questionOffset: firstPartMultilineContent[0].startOffset,
-          answerOffset: secondPartMultilineContent[0].startOffset,
-        };
-        cards.push(card);
-        if (isReverseMultiline) {
-          cards.push(reverseCard(card));
+      const { text, metadata } = separateMetadata(line.content);
+      if (line.content === '' || metadata) {
+        if (text !== '') {
+          secondPartMultilineContent.push({ content: text, startOffset: line.startOffset });
         }
+        x(metadata);
         firstPartMultilineContent = [];
         secondPartMultilineContent = [];
+        state = 'free-text';
       } else {
         secondPartMultilineContent.push(line);
       }
     }
+  }
+
+  function x(line?: string) {
+    const last = secondPartMultilineContent[secondPartMultilineContent.length - 1];
+    const question = firstPartMultilineContent.map((x) => x.content).join('\n');
+    const answer = secondPartMultilineContent.map((x) => x.content).join('\n');
+    const card: RepeatItem = {
+      position: { start: firstPartMultilineContent[0].startOffset, end: last.startOffset + last.content.length },
+      question,
+      answer,
+      metadata: line,
+      isReverse: false,
+      questionOffset: firstPartMultilineContent[0].startOffset,
+      answerOffset: secondPartMultilineContent[0].startOffset,
+    };
+    cards.push(card);
+    if (isReverseMultiline) {
+      cards.push(reverseCard(card));
+    }
+  }
+
+  if (state === 'multiline-card-end') {
+    x();
   }
 
   cards.push(...cardsWaitingForMetadata);
